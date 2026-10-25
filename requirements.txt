@@ -1,0 +1,7 @@
+# Kaggle execution environment for the OMR comparison
+numpy
+pandas
+opencv-python-headless
+torch
+scikit-learn
+Pillow

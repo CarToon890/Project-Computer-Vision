@@ -1,0 +1,26 @@
+# Local photo data and annotation outputs
+Dataset-Computer-vision/
+*.zip
+*.jpg
+*.jpeg
+*.heic
+*.heif
+*.png
+*.webp
+
+# Generated inventories and human-filled annotations
+/data/metadata/image_inventory.csv
+/data/metadata/image_inventory_verified.csv
+/data/metadata/pair_decisions.csv
+/data/metadata/answer_labels.csv
+/data/metadata/sheet_splits.csv
+/data/metadata/heic_conversion_map.csv
+/data/metadata/pair_review.html
+/data/metadata/review_thumbnails/
+/data/normalized_images/
+
+# Local build/inspection outputs
+presentation_build/
+.codex/
+__pycache__/
+*.py[cod]
