@@ -17,6 +17,8 @@ visually confirmed to show the same physical sheet.
    `verified`.
 4. Use `needs_pair_review` for uncertain candidates and `missing` if a retake
    cannot be found. Never split A and B from one sheet across data splits.
+5. Use `excluded` for source photos intentionally omitted from the dataset.
+   Record them in `excluded_images.csv`; keep the original files for traceability.
 
 Record each human-confirmed pair in `pair_decisions_template.csv`. The
 `image_a_id` and `image_b_id` values come from the inventory's `image_id`
@@ -32,6 +34,21 @@ original file, so the inventory can be regenerated with:
 ```powershell
 python tools/build_dataset_manifest.py
 ```
+
+## Exact duplicate files
+
+`duplicate_images.csv` records byte-identical files that should not count as
+separate captures. Keep the source files for traceability; the manifest builder
+marks the redundant copy with `pair_status=duplicate` and
+`duplicate_of_image_id`. Do not use duplicate copies to form A/B pairs or to
+increase the sample count.
+
+## Intentionally excluded images
+
+`excluded_images.csv` records source photos omitted from the usable dataset.
+The manifest builder marks these rows with `pair_status=excluded` while keeping
+the source files in place. To restore an excluded photo, remove its row from
+this ledger and rebuild the inventory.
 
 Open `pair_review.html` in a browser to compare source photos. The page creates
 thumbnails for JPG and HEIC files, lets a reviewer choose A and B, and exports

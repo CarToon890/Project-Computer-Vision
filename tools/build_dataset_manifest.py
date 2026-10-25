@@ -16,6 +16,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DATASET_DIR = ROOT / "Dataset-Computer-vision"
 OUTPUT_DIR = ROOT / "data" / "metadata"
+DUPLICATES_PATH = OUTPUT_DIR / "duplicate_images.csv"
+EXCLUDED_PATH = OUTPUT_DIR / "excluded_images.csv"
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".heic", ".heif"}
 
 
@@ -60,16 +62,41 @@ def stable_image_id(relative_path: str) -> str:
     return f"IMG-{digest}"
 
 
+def load_duplicate_map() -> dict[str, str]:
+    """Return known duplicate path -> canonical image ID mappings."""
+    if not DUPLICATES_PATH.exists():
+        return {}
+    with DUPLICATES_PATH.open(newline="", encoding="utf-8-sig") as stream:
+        return {
+            row["duplicate_relative_path"]: row["canonical_image_id"]
+            for row in csv.DictReader(stream)
+        }
+
+
+def load_excluded_map() -> dict[str, str]:
+    """Return explicitly excluded source paths and their recorded reasons."""
+    if not EXCLUDED_PATH.exists():
+        return {}
+    with EXCLUDED_PATH.open(newline="", encoding="utf-8-sig") as stream:
+        return {
+            row["relative_path"]: row.get("reason", "")
+            for row in csv.DictReader(stream)
+        }
+
+
 def main() -> None:
     if not DATASET_DIR.is_dir():
         raise SystemExit(f"Dataset folder not found: {DATASET_DIR}")
 
     rows: list[dict[str, object]] = []
+    duplicate_map = load_duplicate_map()
+    excluded_map = load_excluded_map()
     for path in sorted(DATASET_DIR.rglob("*"), key=lambda item: item.as_posix().lower()):
         if not path.is_file() or path.suffix.lower() not in IMAGE_EXTENSIONS:
             continue
         relative = path.relative_to(ROOT).as_posix()
         contributor = path.relative_to(DATASET_DIR).parts[0]
+        duplicate_of = duplicate_map.get(relative, "")
         width, height = image_size(path)
         role = declared_role(path)
         rows.append(
@@ -79,7 +106,12 @@ def main() -> None:
                 "pair_id": "",
                 "contributor_id": contributor,
                 "capture_role": role,
-                "pair_status": "needs_pair_review",
+                "pair_status": (
+                    "excluded"
+                    if relative in excluded_map
+                    else "duplicate" if duplicate_of else "needs_pair_review"
+                ),
+                "duplicate_of_image_id": duplicate_of,
                 "relative_path": relative,
                 "file_name": path.name,
                 "extension": path.suffix.lower(),
