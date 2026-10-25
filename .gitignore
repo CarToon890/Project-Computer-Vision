@@ -12,6 +12,8 @@ Dataset-Computer-vision/
 /data/metadata/image_inventory.csv
 /data/metadata/image_inventory_verified.csv
 /data/metadata/pair_decisions.csv
+/data/metadata/pair_decisions_before_auto_*.csv
+/data/metadata/pair_review_progress*.json
 /data/metadata/answer_labels.csv
 /data/metadata/sheet_splits.csv
 /data/metadata/heic_conversion_map.csv
