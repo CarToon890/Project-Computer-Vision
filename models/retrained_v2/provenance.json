@@ -1,0 +1,14 @@
+{
+  "run_folder": "presentation_build/retraining_v2/results_cpu",
+  "preflight_sha256": "d65489da0b02387dd94b6578823423e78df5fddd54602b88b67584e9d3f37ec7",
+  "package_sha256": {
+    "confirmed_rows.npz": "e8bbb768b2401cf151f6b68ed28734f5478f64bd7e90cc0a5ea62f0cee77af99",
+    "src/omr_model.py": "f56b5b014fbe4c641aa23168094d4c0517b717d4174d03834c5918e404971005",
+    "src/omr_retrain.py": "697f5d7c302937d2605884470e6f72a3d70869377a22dbcc0055d8b8f7ba762a",
+    "baseline_row_cnn.pt": "7d407cdb8e3bda91a77c2a2949a3741a402defeedacb79a50af7378d7d57381d",
+    "baseline_config.json": "994b50062ff61ef6aebfdb814c613a1342bb4cf316f72028bc0af5b643197be4"
+  },
+  "geometry_sha256": "dfbf3a5aa40b3991a69e6a33460e0a3e393c77b5f1185567b5fdccd1dbe9fd54",
+  "baseline_weights_preserved": true,
+  "canonical_labels_preserved": true
+}

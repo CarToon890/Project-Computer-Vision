@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+from collections import Counter
 from pathlib import Path
 
 
@@ -67,7 +68,9 @@ def main() -> None:
         writer.writeheader()
         writer.writerows(inventory_rows)
     print(f"Verified sheet pairs applied: {len(used_sheets)}")
-    print(f"Unpaired images remain in review: {len(inventory_rows) - 2 * len(used_sheets)}")
+    counts = Counter(row.get('pair_status', '') for row in inventory_rows)
+    print(f"Unpaired images awaiting review: {counts['needs_pair_review']}")
+    print(f"Duplicate copies: {counts['duplicate']}; additional captures: {counts['additional_capture']}; excluded: {counts['excluded']}")
     print(f"Wrote {args.output}")
 
 

@@ -28,6 +28,12 @@ def main() -> None:
     images = read_csv(args.inventory)
     labels = read_csv(args.labels) if args.labels.exists() else []
     errors: list[str] = []
+    holds_path = args.inventory.parent / "pairing_review_holds.csv"
+    if holds_path.exists():
+        held = {row["sheet_id"] for row in read_csv(holds_path) if row["review_status"] == "pending"}
+        present = {row.get("sheet_id", "") for row in images}
+        if held & present:
+            errors.append(f"{len(held & present)} sheets are on hold for unresolved A/B pairing review")
     image_ids = [row.get("image_id", "") for row in images]
     if len(image_ids) != len(set(image_ids)):
         errors.append("image_id values are not unique")

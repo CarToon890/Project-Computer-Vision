@@ -1,0 +1,12 @@
+{
+  "scope_version": 1,
+  "date": "2026-10-26",
+  "timezone": "Asia/Bangkok",
+  "final_paired_sheets": 270,
+  "final_primary_images": 540,
+  "additional_image_collection": false,
+  "previous_collection_target_pairs": 295,
+  "annotation_policy": "human_inspected_labels_only; unreviewed OMR drafts remain separate",
+  "unpaired_image_policy": "retain originals outside paired A/B experiments",
+  "user_instruction": "ไม่มีการหารูปมาเพิ่มแล้ว"
+}

@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>กรอกคำตอบจริง · OMR</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font:15px "Segoe UI",Tahoma,sans-serif;background:#f3f5f7;color:#17212b}button,select,input{font:inherit}button,select{border:1px solid #b7c2cc;border-radius:6px;background:white;padding:7px 10px}button{cursor:pointer}button:disabled{opacity:.45;cursor:default}button:focus-visible,select:focus-visible{outline:3px solid #174a6e;outline-offset:2px}.primary{background:#174a6e;color:#fff;border-color:#174a6e}.top{padding:12px 18px;background:white;border-bottom:1px solid #d8dfe5}.top h1{font-size:21px;margin:0 0 5px}.top p{margin:4px 0;color:#465868}.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px}.status{font-size:13px;color:#3e5365}.notice{padding:10px 18px;background:#e6eff4;line-height:1.6}.notice strong{color:#173f59}#message{padding:9px 18px;border-bottom:1px solid #d8dfe5;background:#fff8de;white-space:pre-wrap}#message:empty{display:none}.workspace{display:grid;grid-template-columns:minmax(0,1fr) 365px;gap:12px;padding:12px}.photos{min-width:0}.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.photo{background:#fff;border:1px solid #d4dde4;border-radius:8px;overflow:hidden;min-width:0}.photo header{padding:9px;border-bottom:1px solid #d8dfe5}.photo h2{font-size:16px;display:inline;margin:0}.file{font-size:11px;word-break:break-all;color:#536576;margin-top:4px}.photo-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}.photo-controls button,.photo-controls a{font-size:12px}.photo-controls input{width:95px}.viewport{height:67vh;overflow:auto;background:#e8edf1}.stage{position:relative}.stage img{position:absolute;max-width:none;transform-origin:center}.annotator{background:#fff;border:1px solid #d4dde4;border-radius:8px;padding:13px;align-self:start;position:sticky;top:10px}.annotator h2{font-size:18px;margin:0 0 5px}.count{color:#526576;font-size:13px}.question{display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px}.question strong{font-size:22px}.answers{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.answers button{padding:11px 5px;font-weight:600}.answers .other{grid-column:span 5;font-size:14px;font-weight:400;padding:8px}.answers button.chosen{background:#174a6e;color:white;border-color:#174a6e}.answers button[data-mark="ambiguous"].chosen{background:#805200}.answer-state{font-size:13px;min-height:23px;margin:8px 0}.options{font-size:13px;margin:9px 0}.questions{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin:12px 0}.questions button{font-size:11px;min-width:0;padding:5px 1px;border-radius:3px}.questions button.filled{background:#dcebe5;color:#173f31}.questions button.unclear{background:#fff0cc;color:#755000}.questions button.current{outline:2px solid #174a6e;outline-offset:0;font-weight:700}.help{font-size:12px;color:#526576;line-height:1.6;border-top:1px solid #d8dfe5;padding-top:9px}.review{margin:10px 0}.review input{width:17px;height:17px;vertical-align:middle}progress{width:160px;accent-color:#174a6e}.sheetnav{max-width:260px}.hidden{display:none!important}a{color:#174a6e}.batch{margin-left:auto}.foot{padding:0 18px 15px;font-size:12px;color:#526576}@media(max-width:1100px){.workspace{grid-template-columns:1fr}.annotator{position:static}.viewport{height:60vh}.batch{margin-left:0}.questions{grid-template-columns:repeat(20,1fr)}}@media(max-width:600px){.photo-grid{grid-template-columns:1fr}.questions{grid-template-columns:repeat(10,1fr)}}
+.pilot-panel{background:#eef4f7;border:1px solid #d4dde4;border-radius:6px;padding:9px;margin:9px 0}.pilot-panel h3{font-size:15px;margin:0 0 6px}.pilot-panel p{font-size:13px;margin:5px 0;line-height:1.5}.pilot-crop{position:relative;overflow:hidden;width:100%;background:white;margin:8px 0}.pilot-crop img{position:absolute;left:0;max-width:none}.pilot-panel a{font-size:12px}.pilot-stat{font-size:13px;color:#435d70;margin:6px 0}
+</style>
+<style>.review-workflow{margin:12px;padding:16px;background:#fff;border:1px solid #bdcdd7;border-radius:8px}.review-workflow h2{margin:0;font-size:20px}.review-workflow p{line-height:1.5;font-size:14px}.queue-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}.queue-card{padding:12px;border:1px solid #ccd8e0;border-radius:6px;min-width:0;background:#f8fafb}.queue-card p{margin:6px 0}.queue-crop{width:100%;aspect-ratio:600/90;overflow:hidden;position:relative;background:#fff;margin:5px 0 9px}.queue-crop img{position:absolute;width:100%;left:0;max-width:none}.queue-card .toolbar{gap:6px}.queue-card button,.queue-card select{font-size:13px}@media(max-width:800px){.queue-cards{grid-template-columns:1fr}}</style>
+</head>
+<body>
+<header class="top">
+ <h1>กรอกคำตอบจริงบนกระดาษ</h1>
+ <p id="global"></p><p id="draftSummary" class="pilot-stat"></p><p id="pilotStats" class="pilot-stat"></p>
+ <div class="toolbar"><progress id="progress" value="0"></progress><span id="saved" class="status"></span></div>
+ <div class="toolbar">
+  <button id="prev">← แผ่นก่อน</button><select id="sheet" class="sheetnav" aria-label="เลือกแผ่น"></select><button id="next">แผ่นถัดไป →</button>
+  <button id="nextOpen">ไปแผ่นที่ยังไม่ครบ</button><label id="batchControls">ชุดอ่านอัตโนมัติ <select id="proposalBatch" aria-label="เลือกชุดคำตอบเสนอ"></select></label><button id="jumpBatch">เริ่ม/ทำต่อชุดนี้</button>
+  <button id="export" class="primary batch">ส่งออก answer_labels_review.csv</button><button id="exportPilot" class="hidden">ส่งออกผลตรวจชุดนี้</button><button id="backup">สำรอง JSON</button><button id="restore">นำเข้า CSV / JSON</button>
+  <input id="importFile" type="file" accept=".csv,.json" class="hidden">
+ </div>
+</header>
+<section id="reviewWorkflow" class="hidden review-workflow">
+ <h2 id="reviewWorkflowTitle">ตรวจเฉพาะจุดสำคัญ · คิวตรวจคำตอบ</h2>
+ <p>เก็บงานเดิมถึง S0038 เริ่มร่างอัตโนมัติจาก S0039 ร่าง OMR ยังไม่ใช่คำตอบที่คนตรวจแล้ว</p>
+ <p id="workflowSummary"></p><p id="queueProgress"></p>
+ <div class="toolbar"><label>คิว <select id="queueFilter"><option value="all">คิวเดิมทั้งหมด</option><option value="risk">800 ข้อเสี่ยง</option><option value="sample">200 ข้อสุ่ม</option></select></label><button id="reviewSupplement" class="hidden">ตรวจร่างเสริมจากภาพ A</button><button id="exportDrafts">ส่งออกร่าง OMR / ข้อรอตรวจ</button></div>
+ <p>ตรวจภาพแล้วกด 1–5 ครั้งเดียวเพื่อบันทึก หรือกด “ถูกแล้ว” เพื่อรับคำตอบเดิม ครบชุดจะขึ้นชุดถัดไปให้ การสุ่มใช้ค้นหาจุดผิด ไม่ได้รับรองคำตอบที่เหลือทั้งหมด</p>
+ <div class="queue-dock"><div class="toolbar"><button id="confirmQueuePage" class="primary">ตรวจครบแล้ว ยืนยันข้อที่แสดง · Ctrl+Enter</button><button id="undoQueue">ย้อนกลับ · Ctrl+Z</button><button id="focusQueue">ใช้คีย์ลัดคิว</button><strong id="queueActive"></strong></div><p>1–5 / B / M / U = บันทึกทันที · Enter = ถูกแล้ว · ลูกศร = เปลี่ยนข้อ · S = พัก · Esc = ออกจากคีย์ลัดคิว</p></div>
+ <div id="queueCards" class="queue-cards"></div>
+</section>
+<div id="reviewInstructions" class="notice"><strong>ตรวจคำตอบเสนอทีละชุด:</strong> ดูภาพแถวคำตอบและภาพ A/B ถ้าคำตอบเสนอตรงกับรอยฝน ให้กด “ยืนยันคำตอบเสนอ” หรือ Enter ถ้าไม่ตรงให้เลือกค่าที่เห็นจริงด้านล่าง คำตอบเสนอจะยังไม่ถูกกรอกจนกว่าจะยืนยัน เมื่อครบ 100 ข้อให้ติ๊กตรวจทานครบแผ่น แล้วส่งออก CSV และผลตรวจชุดนี้ แผ่นที่ระบบอ่านไม่ได้ให้กรอกจากภาพเอง</div>
+<div id="message" role="status" aria-live="polite"></div>
+<div id="pairHoldSummary" class="notice hidden"><span id="pairHoldText"></span> <a id="pairRepairLink">ดูรายละเอียดการตรวจคู่ภาพ</a></div>
+<main class="workspace">
+ <section class="photos"><div class="photo-grid">
+  <article class="photo"><header><h2>ภาพ A</h2><div class="file" id="nameA"></div><div class="photo-controls"><label>ซูม <input id="zoomA" type="range" min="100" max="350" step="25" value="100" aria-label="ซูมภาพ A"></label><button id="rotateA">หมุน 90°</button><a id="openA" target="_blank" rel="noopener">เปิดภาพใหญ่</a></div></header><div id="viewA" class="viewport"><div id="stageA" class="stage"><img id="imgA" alt="กระดาษคำตอบภาพ A"></div></div></article>
+  <article class="photo"><header><h2>ภาพ B</h2><div class="file" id="nameB"></div><div class="photo-controls"><label>ซูม <input id="zoomB" type="range" min="100" max="350" step="25" value="100" aria-label="ซูมภาพ B"></label><button id="rotateB">หมุน 90°</button><a id="openB" target="_blank" rel="noopener">เปิดภาพใหญ่</a></div></header><div id="viewB" class="viewport"><div id="stageB" class="stage"><img id="imgB" alt="กระดาษคำตอบภาพ B"></div></div></article>
+ </div></section>
+ <aside class="annotator">
+  <h2 id="sheetTitle"></h2><div id="contributor" class="count"></div><div id="sheetCount" class="count"></div><div id="pairHoldNotice" class="notice hidden"></div><div id="draftNotice" class="notice hidden"></div><button id="nextDraftFlag" class="hidden">ไปข้อที่แนะนำให้ตรวจ</button>
+  <div class="question"><button id="prevQ" aria-label="ข้อก่อน">←</button><strong id="questionNo"></strong><button id="nextQ" aria-label="ข้อถัดไป">→</button></div>
+  <section id="pilotPanel" class="pilot-panel hidden"><h3>คำตอบเสนอจากระบบ</h3><p id="proposalText"></p><div id="pilotCropFrame" class="pilot-crop"><img id="pilotCrop" alt="ภาพแถวคำตอบสำหรับตรวจรอยฝน"></div><button id="acceptProposal" class="primary">ยืนยันคำตอบเสนอ (Enter)</button><p><a id="pilotOverlay" target="_blank" rel="noopener">ดูตำแหน่งที่ระบบอ่านบนภาพเต็ม</a></p></section>
+  <div class="answers" id="answers">
+   <button data-mark="1">1</button><button data-mark="2">2</button><button data-mark="3">3</button><button data-mark="4">4</button><button data-mark="5">5</button>
+   <button class="other" data-mark="blank">ไม่ได้ฝนคำตอบ · blank (B)</button><button class="other" data-mark="multiple">ฝนหลายช่อง · multiple (M)</button><button class="other" data-mark="ambiguous">ดูไม่ชัด / ไม่แน่ใจ · ambiguous (U)</button>
+  </div>
+  <div id="answerState" class="answer-state"></div>
+  <div class="toolbar"><button id="clearQ">ล้างคำตอบข้อนี้</button><button id="nextEmpty">ข้อที่ยังไม่ได้กรอก</button></div>
+  <label class="options"><input id="autoNext" type="checkbox" checked> เลือกแล้วเลื่อนไปข้อถัดไป</label>
+  <div id="questions" class="questions" aria-label="ข้อ 1 ถึง 100"></div>
+  <label class="review"><input id="reviewed" type="checkbox"> ตรวจทานครบแผ่นแล้ว</label>
+  <p id="answerHelp" class="help">ปุ่มข้อสีเขียว = กรอกแล้ว · สีเหลือง = ดูไม่ชัด · สีขาว = ยังไม่ได้กรอก<br>คีย์ลัด: 1–5, B, M, U · ลูกศรซ้าย/ขวาเปลี่ยนข้อ<br>ใช้ทั้ง A/B ดูรอยฝน หากแยกไม่ออกให้เลือก ambiguous ไว้ตรวจทาน สามารถกลับมาแก้ได้ทุกข้อ</p>
+ </aside>
+</main>
+<p class="foot">การเลือกบันทึกในเบราว์เซอร์นี้โดยอัตโนมัติ CSV ที่ส่งออกต้องนำเข้าไฟล์หลักก่อนใช้ฝึกโมเดล</p>
+<style>.questions button.machine-draft{background:#e8edf4;color:#526576}.queue-dock{position:sticky;top:0;z-index:20;background:#fff;border:1px solid #b7cbd9;border-radius:7px;padding:10px;margin:12px 0;box-shadow:0 3px 12px #17212b18}.queue-dock .toolbar{margin:0}.queue-dock p{margin:7px 0 0;font-size:12px}.queue-cards,.queue-card{scroll-margin-top:140px}.queue-card.queue-active{outline:3px solid #174a6e;outline-offset:1px}.queue-card.queue-done{background:#edf7ef;border-color:#8ab793}.queue-card.queue-deferred{background:#f3f3f3}.queue-answer-buttons{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:10px 0}.queue-answer-buttons button{min-height:48px;padding:8px;font-size:21px;font-weight:600;touch-action:manipulation}.queue-answer-buttons button.selected{border:2px solid #174a6e;background:#e3eff7;color:#163e5b}.queue-answer-buttons button.queue-special{grid-column:span 5;font-size:13px;min-height:36px;padding:5px}.queue-accept{min-height:44px;flex:1;font-weight:600}.queue-choice-state{font-weight:600}</style>
+<style>.queue-answer-buttons{grid-template-columns:repeat(15,minmax(0,1fr))}.queue-answer-buttons button{grid-column:span 3}.queue-answer-buttons button.queue-special{grid-column:span 5;font-size:12px;line-height:1.3;min-height:40px}@media(max-width:800px){.queue-cards,.queue-card{scroll-margin-top:230px}}</style>
+<style>.queue-choice-state{min-height:4.5em;line-height:1.5}</style>
+<script id="annotation-data" type="application/json">__ANNOTATION_DATA__</script>
+<script>
+'use strict';
+const DATA=JSON.parse(document.getElementById('annotation-data').textContent);
+const $=id=>document.getElementById(id), sheets=DATA.sheets, known=new Set(sheets.map(s=>s.id));
+const marks=new Set(['1','2','3','4','5','blank','multiple','ambiguous']);
+const assisted=DATA.annotation_mode==='omr_assisted';
+const proposalBatches=DATA.pilot?.batches?.length?DATA.pilot.batches:(Object.keys(DATA.pilot?.sheets||{}).length?[{id:'legacy',sheet_ids:Object.keys(DATA.pilot.sheets),run_id:DATA.pilot.run_id,method:DATA.pilot.method}]:[]);
+const key='omr-answer-review-v1-'+DATA.fingerprint, angles={A:0,B:0};
+let state={answers:{...(DATA.drafts?.answers||{}),...DATA.initial},reviewed:{},sheet:sheets[0].id,question:1},storageOkay=true;
+function notify(text){$('message').textContent=text}
+function validAnswers(value){
+ if(!value||typeof value!=='object'||Array.isArray(value))throw Error('ข้อมูลคำตอบไม่ถูกต้อง');
+ for(const [k,v] of Object.entries(value)){const parts=k.split(':');if(parts.length!==2||!known.has(parts[0])||!/^([1-9]|[1-9][0-9]|100)$/.test(parts[1])||(v!==''&&!marks.has(v)))throw Error('คำตอบไม่ถูกต้อง: '+k)}
+ return value;
+}
+try{
+ let raw=localStorage.getItem(key),migration=null;
+ if(!raw)for(const candidate of DATA.pairing_migrations||[]){const previous=localStorage.getItem('omr-answer-review-v1-'+candidate.from_fingerprint);if(previous){raw=previous;migration=candidate;break}}
+ if(raw){const saved=JSON.parse(raw);
+  if(migration){const reset=new Set(migration.reset_sheets),keep=s=>known.has(s)&&!reset.has(s),keepKey=k=>keep(k.split(':')[0]);
+   saved.answers=Object.fromEntries(Object.entries(saved.answers).filter(([k])=>keepKey(k)));saved.reviewed=Object.fromEntries(Object.entries(saved.reviewed||{}).filter(([s])=>keep(s)));saved.draftsSeen=Object.fromEntries(Object.entries(saved.draftsSeen||{}).filter(([s])=>keep(s)));
+   for(const field of ['answerMeta','queueEdits','queueDeferred','queuePageDeferred'])if(saved[field])saved[field]=Object.fromEntries(Object.entries(saved[field]).filter(([k])=>keepKey(k)));
+   saved.queuePageKeys=(saved.queuePageKeys||[]).filter(keepKey);if(saved.queueActiveKey&&!keepKey(saved.queueActiveKey))saved.queueActiveKey='';saved.queueUndo=[];
+   if(!known.has(saved.sheet)){saved.sheet=sheets.find(s=>s.id>=saved.sheet)?.id||sheets[0].id;saved.question=1}
+   notify('อัปเดตคู่ภาพแล้ว เก็บคำตอบของคู่เดิมที่ยังใช้ได้ไว้ ข้อมูลของแผ่นที่เลิกใช้ยังอยู่ในสำรองเดิม และเริ่มตรวจใหม่เฉพาะคู่ที่เปลี่ยนภาพ')
+  }
+  validAnswers(saved.answers);
+  state={...state,...saved,answers:{...(DATA.drafts?.answers||{}),...DATA.initial,...saved.answers}};if(!known.has(state.sheet))state.sheet=sheets[0].id;if(!Number.isInteger(state.question)||state.question<1||state.question>100)state.question=1
+ }
+}catch(e){storageOkay=false;notify('เปิดข้อมูลที่บันทึกในเบราว์เซอร์ไม่สำเร็จ: '+e.message+' โปรดส่งออก CSV เก็บไว้ก่อนปิดหน้า')}
+state.draftsSeen=state.draftsSeen||{};
+for(const [sheet,draft] of Object.entries(DATA.drafts?.sheets||{})){if(state.draftsSeen[sheet]!==draft.id){state.reviewed[sheet]=false;state.draftsSeen[sheet]=draft.id}}
+state.correctionsApplied=Array.isArray(state.correctionsApplied)?state.correctionsApplied:[];
+let correctedOnLoad=0;
+for(const update of DATA.corrections||[]){if(!state.correctionsApplied.includes(update.id)){if(state.answers[update.key]!==update.mark)correctedOnLoad++;state.answers[update.key]=update.mark;state.correctionsApplied.push(update.id)}}
+if(correctedOnLoad)notify('อัปเดตคำตอบที่คุณยืนยันแก้ไขจากไฟล์หลักแล้ว '+correctedOnLoad+' ข้อ');
+const current=()=>sheets.find(s=>s.id===state.sheet);
+const isHeld=sheet=>Object.prototype.hasOwnProperty.call(DATA.pairing_holds||{},sheet);
+const value=(sheet,q)=>state.answers[sheet+':'+q]||'';
+const exportableValue=(sheet,q)=>DATA.assistance?(humanVerified(sheet,q)?value(sheet,q):''):(isHeld(sheet)||(DATA.drafts?.sheets?.[sheet]&&!state.reviewed[sheet])?'':value(sheet,q));
+const count=sheet=>isHeld(sheet)?0:Array.from({length:100},(_,i)=>value(sheet,i+1)).filter(Boolean).length;
+const textMark=v=>({'blank':'ไม่ได้ฝนคำตอบ','multiple':'ฝนหลายช่อง','ambiguous':'ดูไม่ชัด / ไม่แน่ใจ'}[v]||v);
+const currentBatch=()=>proposalBatches.find(b=>b.id===state.proposalBatch)||proposalBatches[0]||null;
+const batchForSheet=sheet=>proposalBatches.find(b=>b.sheet_ids.includes(sheet));
+function proposalFor(sheet,q){
+ const result=DATA.pilot?.sheets?.[sheet];if(!result)return null;
+ const role=result.B?.rows?.length===100?'B':result.A?.rows?.length===100?'A':null;if(!role)return null;
+ const other=role==='B'?'A':'B';const row=result[role].rows.find(r=>r.question_no===q);
+ if(!row||!marks.has(row.proposed))return null;
+ return {...row,role,sprite:result[role].sprite,overlay:result[role].overlay,other:result[other]?.rows?.find(r=>r.question_no===q)?.proposed||''};
+}
+function displayProposalFor(sheet,q){
+ const extra=assisted&&!isHeld(sheet)?DATA.draft_supplement?.items?.[sheet+':'+q]:null;
+ if(!extra)return proposalFor(sheet,q);
+ const result=DATA.pilot?.sheets?.[sheet],image=result?.[extra.role],row=image?.rows?.find(r=>r.question_no===q);
+ if(!row||!marks.has(extra.proposed)||(extra.image_a_id&&extra.image_a_id!==result.A.image_id)||(extra.image_b_id&&extra.image_b_id!==result.B.image_id))return proposalFor(sheet,q);
+ const other=extra.role==='A'?'B':'A';
+ return {...row,...extra,uncertain:true,supplemental:true,sprite:image.sprite,overlay:image.overlay,other:result[other]?.rows?.find(r=>r.question_no===q)?.proposed||'',method:DATA.draft_supplement.method,run_id:DATA.draft_supplement.run_id};
+}
+function pilotStatistics(){
+ let entered=0,checked=0,compared=0,matched=0,available=0;
+ const ids=(currentBatch()?.sheet_ids||[]).filter(id=>!isHeld(id));
+ for(const s of ids)for(let q=1;q<=100;q++){const proposed=proposalFor(s,q),human=value(s,q);if(proposed)available++;if(human)entered++;if(human&&state.reviewed[s]){checked++;if(proposed){compared++;if(proposed.proposed===human)matched++}}}
+ return {total:ids.length*100,entered,checked,compared,matched,available};
+}
+function renderPilotStats(){
+ const s=pilotStatistics(),batch=currentBatch();$('exportPilot').classList.toggle('hidden',s.total===0);$('batchControls').classList.toggle('hidden',s.total===0);$('jumpBatch').classList.toggle('hidden',s.total===0);
+ if(!s.total){$('pilotStats').textContent='';return}
+ $('proposalBatch').value=batch.id;$('exportPilot').textContent='ส่งออกผลตรวจชุดนี้ ('+(s.total/100)+' แผ่นที่ไม่พักงาน)';
+ $('pilotStats').textContent='ชุด '+batch.sheet_ids[0]+'–'+batch.sheet_ids[batch.sheet_ids.length-1]+': กรอก '+s.entered+'/'+s.total+' ข้อ · ตรวจทานครบแผ่นแล้ว '+s.checked+' ข้อ · ระบบมีข้อเสนอ '+s.available+'/'+s.total+' ข้อ · '+(s.compared?'ความตรงกันหลังตรวจ '+s.matched+'/'+s.compared+' ('+(100*s.matched/s.compared).toFixed(1)+'%) เฉพาะข้อที่ตรวจทานแล้ว':'รอตรวจทานครบแผ่นก่อนคำนวณความตรงกัน')+(assisted?' · ใช้ OMR ช่วยกรอกทุกชุด รวม Test ผลนี้ยังไม่ใช่ความแม่นยำจากการทดสอบอิสระ':'');
+}
+function layoutPilotCrop(){const img=$('pilotCrop'),frame=$('pilotCropFrame');const width=frame.clientWidth;if(!width)return;const rowHeight=90*width/600;frame.style.height=rowHeight+'px';img.style.width=width+'px';img.style.height='auto';img.style.top=(-(state.question-1)*rowHeight)+'px'}
+function renderPilot(){
+ const included=!!DATA.pilot?.sheets?.[state.sheet]&&!isHeld(state.sheet);$('pilotPanel').classList.toggle('hidden',!included);if(!included){$('acceptProposal').disabled=true;return}
+ const p=displayProposalFor(state.sheet,state.question),blind=current().split==='test'&&!assisted,existing=value(state.sheet,state.question);$('acceptProposal').disabled=!p||blind||(DATA.assistance?humanVerified(state.sheet,state.question):!!existing);$('acceptProposal').classList.toggle('hidden',blind);$('acceptProposal').textContent=DATA.assistance&&existing?'ตรวจแล้ว ยืนยันคำตอบที่กรอก (Enter)':'ยืนยันคำตอบเสนอ (Enter)';
+ $('pilotCropFrame').classList.toggle('hidden',!p?.sprite);$('pilotOverlay').classList.toggle('hidden',!p?.overlay);
+ if(!p){$('proposalText').textContent='ระบบอ่านแผ่นนี้ไม่ได้ โปรดกรอกจากภาพ A/B';return}
+ const cross=p.other?(p.other===p.proposed?' · A/B อ่านตรงกัน':' · A/B อ่านไม่ตรงกัน โปรดตรวจภาพเต็ม'):' · อีกภาพอ่านอัตโนมัติไม่ได้';
+ $('proposalText').textContent=blind?'แผ่นนี้อยู่ในชุด Test: กรอกจากรอยฝนด้วยตัวเอง ผลอ่านอัตโนมัติจะเก็บไว้เทียบหลังตรวจทาน':('เสนอ: '+textMark(p.proposed)+' จากภาพ '+p.role+(p.supplemental?' · ร่างเสริมจากคะแนน A/B':'')+cross+(p.uncertain?' · ต้องตรวจรอยฝนเป็นพิเศษ':''));
+ if(p.sprite)$('pilotCrop').src=p.sprite;if(p.overlay)$('pilotOverlay').href=p.overlay;layoutPilotCrop();
+}
+function save(){
+ if(storageOkay){try{localStorage.setItem(key,JSON.stringify(state));$('saved').textContent='บันทึกในเบราว์เซอร์แล้ว '+new Date().toLocaleTimeString('th-TH')}catch(e){storageOkay=false;notify('บันทึกในเบราว์เซอร์ไม่ได้ โปรดส่งออก CSV และสำรอง JSON ก่อนปิดหน้า')}}
+}
+function layoutImage(role){
+ const image=$('img'+role),view=$('view'+role),stage=$('stage'+role);if(!image.naturalWidth)return;
+ const rotated=angles[role]%180!==0,zoom=Number($('zoom'+role).value)/100;
+ const scale=view.clientWidth/(rotated?image.naturalHeight:image.naturalWidth)*zoom;
+ const w=image.naturalWidth*scale,h=image.naturalHeight*scale;
+ stage.style.width=(rotated?h:w)+'px';stage.style.height=(rotated?w:h)+'px';
+ Object.assign(image.style,{width:w+'px',height:h+'px',left:'50%',top:'50%',transform:'translate(-50%,-50%) rotate('+angles[role]+'deg)'});
+}
+function renderCounts(){
+ const held=Object.keys(DATA.pairing_holds||{});$('pairHoldSummary').classList.toggle('hidden',held.length===0);$('pairHoldText').textContent='พักการกรอก '+held.length+' แผ่นระหว่างแก้คู่ A/B ภาพคู่เดิมในช่วงนี้ยังใช้ยืนยันป้ายคำตอบไม่ได้';$('pairRepairLink').href=DATA.repair_url||'#';
+ $('pairRepairLink').onclick=DATA.repair_sheet?e=>{e.preventDefault();changeSheet(DATA.repair_sheet);$('sheetTitle').scrollIntoView?.({behavior:'smooth',block:'start'})}:null;
+ $('pairHoldNotice').classList.toggle('hidden',!isHeld(state.sheet));$('pairHoldNotice').textContent=isHeld(state.sheet)?'พักกรอกแผ่นนี้: กำลังแก้การจับคู่ A/B กรุณาตรวจคู่ใหม่ก่อน':'';
+ let total=0,done=0,reviewed=0;for(const sheet of sheets){const n=count(sheet.id);total+=n;if(n===100)done++;if(n===100&&state.reviewed[sheet.id])reviewed++}
+ $('global').textContent='กรอกแล้ว '+total.toLocaleString()+' / '+(sheets.length*100).toLocaleString()+' คำตอบ · ครบ 100 ข้อ '+done+' / '+sheets.length+' แผ่น · ตรวจทานแล้ว '+reviewed+' แผ่น';
+ const pendingDrafts=Object.keys(DATA.drafts?.sheets||{}).filter(id=>!state.reviewed[id]);
+ $('draftSummary').textContent=pendingDrafts.length?'มีร่างที่ Codex อ่านจากภาพ '+pendingDrafts.length+' แผ่น รอคุณตรวจรับรอง ร่างที่ยังไม่รับรองจะไม่ถูกส่งออกเป็นคำตอบจริง':'';
+ const draft=DATA.drafts?.sheets?.[state.sheet];$('draftNotice').classList.toggle('hidden',!draft);$('nextDraftFlag').classList.toggle('hidden',!draft?.review_questions?.length);
+ if(draft){$('draftNotice').textContent=state.reviewed[state.sheet]?'คุณตรวจรับรองร่างแผ่นนี้แล้ว':'กรอกจากภาพโดย Codex · ยังรอคุณตรวจรับรอง ตรวจและแก้ได้ทุกข้อ แล้วติ๊ก “ตรวจทานครบแผ่นแล้ว” เพื่อรวมคำตอบแผ่นนี้ใน CSV';$('nextDraftFlag').textContent='ไปข้อที่แนะนำให้ตรวจ ('+draft.review_questions.length+' ข้อ)'}
+ $('progress').max=sheets.length*100;$('progress').value=total;
+ for(const option of $('sheet').options){const n=count(option.value);option.textContent=option.value+' · '+n+'/100'+(state.reviewed[option.value]&&n===100?' · ตรวจแล้ว':'')}
+ $('sheet').value=state.sheet;const n=count(state.sheet);$('sheetCount').textContent='แผ่นนี้กรอกแล้ว '+n+'/100 ข้อ';$('reviewed').disabled=n!==100;$('reviewed').checked=n===100&&!!state.reviewed[state.sheet];renderPilotStats();if(DATA.assistance)renderAssistance();
+}
+function renderQuestion(){
+ const v=value(state.sheet,state.question),held=isHeld(state.sheet);$('questionNo').textContent='ข้อ '+state.question;
+ $('answerState').textContent=held?'พักกรอกระหว่างตรวจคู่ A/B':v?'บันทึกไว้: '+textMark(v)+(DATA.assistance?' · '+statusText(state.sheet,state.question):''):'ยังไม่ได้กรอก';
+ document.querySelectorAll('[data-mark]').forEach(b=>{const active=!held&&b.dataset.mark===v;b.disabled=held;b.classList.toggle('chosen',active);b.setAttribute('aria-pressed',String(active))});
+ document.querySelectorAll('[data-question]').forEach(b=>{const q=Number(b.dataset.question),answer=value(state.sheet,q);b.classList.toggle('current',q===state.question);b.classList.toggle('filled',!!answer);b.classList.toggle('unclear',answer==='ambiguous');b.classList.toggle('machine-draft',!!DATA.assistance&&!!answer&&!humanVerified(state.sheet,q));b.title='ข้อ '+q+': '+(answer?textMark(answer):'ยังไม่ได้กรอก')+(DATA.assistance?' · '+statusText(state.sheet,q):'')});
+ $('prevQ').disabled=state.question===1;$('nextQ').disabled=state.question===100;renderPilot();
+}
+function showSheet(){
+ const s=current();$('sheetTitle').textContent=s.id;$('contributor').textContent=s.contributor;
+ for(const role of ['A','B']){angles[role]=0;$('zoom'+role).value=100;$('img'+role).src=s[role].url;$('open'+role).href=s[role].url;$('name'+role).textContent=s[role].name;$('view'+role).scrollTo(0,0)}
+ const i=sheets.indexOf(s);$('prev').disabled=i===0;$('next').disabled=i===sheets.length-1;renderCounts();renderQuestion();
+}
+function changeSheet(id){if(!known.has(id))return;state.sheet=id;state.question=1;const batch=batchForSheet(id);if(batch)state.proposalBatch=batch.id;save();showSheet()}
+function jumpToBatch(){const batch=currentBatch();if(!batch)return;const id=batch.sheet_ids.find(id=>count(id)<100)||batch.sheet_ids.find(id=>!state.reviewed[id])||batch.sheet_ids[0];changeSheet(id)}
+function choose(mark){
+ if(isHeld(state.sheet)){notify('แผ่นนี้พักกรอกระหว่างแก้คู่ A/B');return}
+ const q=state.question;state.answers[state.sheet+':'+q]=mark;state.reviewed[state.sheet]=false;
+ if(DATA.assistance)recordHumanChoice(state.sheet,q,mark);
+ if(mark&&$('autoNext').checked&&state.question<100)state.question++;
+ save();renderCounts();renderQuestion();
+ if(mark)notify('บันทึก '+state.sheet+' ข้อ '+q+' = '+textMark(mark)+(state.question!==q?' · ไปข้อ '+state.question:' · ครบข้อสุดท้ายของแผ่น'));
+}
+for(const s of sheets){const o=document.createElement('option');o.value=s.id;$('sheet').append(o)}
+for(let q=1;q<=100;q++){const b=document.createElement('button');b.dataset.question=q;b.textContent=q;b.onclick=()=>{state.question=q;save();renderQuestion()};$('questions').append(b)}
+document.querySelectorAll('[data-mark]').forEach(b=>b.onclick=()=>choose(b.dataset.mark));
+$('acceptProposal').onclick=()=>{const p=displayProposalFor(state.sheet,state.question),existing=value(state.sheet,state.question);if(p&&(assisted||current().split!=='test')&&(DATA.assistance?!humanVerified(state.sheet,state.question):!existing))choose(DATA.assistance&&existing?existing:p.proposed)};
+$('pilotCrop').onload=layoutPilotCrop;
+$('sheet').onchange=()=>changeSheet($('sheet').value);
+$('proposalBatch').onchange=()=>{state.proposalBatch=$('proposalBatch').value;jumpToBatch()};$('jumpBatch').onclick=jumpToBatch;
+$('prev').onclick=()=>changeSheet(sheets[sheets.indexOf(current())-1]?.id);
+$('next').onclick=()=>changeSheet(sheets[sheets.indexOf(current())+1]?.id);
+$('nextOpen').onclick=()=>{const i=sheets.indexOf(current());const ordered=[...sheets.slice(i+1),...sheets.slice(0,i+1)];const s=ordered.find(s=>count(s.id)<100);s?changeSheet(s.id):notify('กรอกครบทุกแผ่นแล้ว โปรดตรวจทานและส่งออก CSV')};
+function stepQuestion(delta){state.question=Math.max(1,Math.min(100,state.question+delta));save();renderQuestion()}
+$('prevQ').onclick=()=>stepQuestion(-1);$('nextQ').onclick=()=>stepQuestion(1);$('clearQ').onclick=()=>choose('');
+$('nextEmpty').onclick=()=>{for(let i=1;i<=100;i++){const q=((state.question-1+i)%100)+1;if(!value(state.sheet,q)){state.question=q;save();renderQuestion();return}}notify('แผ่นนี้กรอกครบ 100 ข้อแล้ว')};
+$('reviewed').onchange=()=>{if(count(state.sheet)!==100)return;state.reviewed[state.sheet]=$('reviewed').checked;if(DATA.assistance)reviewWholeSheet(state.sheet,$('reviewed').checked);save();renderCounts()};
+$('nextDraftFlag').onclick=()=>{const questions=DATA.drafts?.sheets?.[state.sheet]?.review_questions||[];if(!questions.length)return;state.question=questions.find(q=>q>state.question)||questions[0];save();renderQuestion()};
+for(const role of ['A','B']){$('img'+role).onload=()=>layoutImage(role);$('img'+role).onerror=()=>notify('เปิดภาพ '+role+' ไม่สำเร็จ: '+current()[role].name);$('zoom'+role).oninput=()=>layoutImage(role);$('rotate'+role).onclick=()=>{angles[role]=(angles[role]+90)%360;layoutImage(role)}}
+window.addEventListener('resize',()=>{layoutImage('A');layoutImage('B');layoutPilotCrop()});
+document.addEventListener('keydown',e=>{
+ if(DATA.assistance&&queueKeyTarget())return;
+ if(document.activeElement?.closest?.('#reviewWorkflow'))return;
+ if(e.ctrlKey||e.metaKey||e.altKey||['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName))return;
+ const k=e.key.toLowerCase();const mark={'b':'blank','m':'multiple','u':'ambiguous'}[k]||(marks.has(k)?k:null);
+ if(mark){e.preventDefault();choose(mark)}else if(k==='enter'&&!$('acceptProposal').disabled&&!$('pilotPanel').classList.contains('hidden')){e.preventDefault();$('acceptProposal').click()}else if(k==='arrowleft'||k==='arrowright'){e.preventDefault();stepQuestion(k==='arrowleft'?-1:1)}
+});
+function download(name,data,type){const url=URL.createObjectURL(new Blob([data],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function exportCsv(){
+ const rows=[['sheet_id','question_no','ground_truth']];for(const s of sheets)for(let q=1;q<=100;q++)rows.push([s.id,q,exportableValue(s.id,q)]);
+ const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n');
+ download('answer_labels_review.csv',csv,'text/csv;charset=utf-8');notify(DATA.assistance?'ส่งออกเฉพาะคำตอบที่คนตรวจแล้ว ร่าง OMR และข้อรอตรวจเว้นว่าง ใช้ปุ่มส่งออกร่างเพื่อเก็บอีกไฟล์':'ส่งออก CSV แล้ว ร่างจาก Codex ที่ยังไม่ติ๊กตรวจรับรองจะเว้นว่าง โปรดส่งไฟล์ให้ Codex นำเข้า answer_labels.csv ในโปรเจกต์');
+}
+$('export').onclick=exportCsv;
+function exportPilot(){
+ const batch=currentBatch();if(!batch)return;
+ const rows=[['sheet_id','question_no','proposed','proposal_role','ground_truth','reviewed_sheet','matches_reviewed_label','method','run_id','annotation_mode','evaluation_type','independent_evaluation']];
+ for(const s of batch.sheet_ids.filter(id=>!isHeld(id)))for(let q=1;q<=100;q++){const p=proposalFor(s,q),human=exportableValue(s,q),reviewed=!!state.reviewed[s];rows.push([s,q,p?.proposed||'',p?.role||'',human,reviewed?'true':'false',reviewed&&human&&p?(p.proposed===human?'1':'0'):'',batch.method,batch.run_id,assisted?'omr_assisted':'test_blind','reviewed_label_agreement','false'])}
+ const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n');download('answer_pilot_evaluation_'+batch.id+'.csv',csv,'text/csv;charset=utf-8');notify('ส่งออกผลตรวจชุด '+batch.id+' แล้ว ผลคำนวณเฉพาะแผ่นที่กรอกครบและติ๊กตรวจทานครบแผ่นแล้ว');
+}
+$('exportPilot').onclick=exportPilot;
+$('backup').onclick=()=>download('answer_review_backup.json',JSON.stringify({version:1,fingerprint:DATA.fingerprint,...state},null,2),'application/json');
+function parseCsv(text){
+ const rows=[];let row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){cell+='"';i++}else quoted=!quoted}else if(c===','&&!quoted){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(x=>x!==''))rows.push(row);row=[];cell=''}else cell+=c}if(quoted)throw Error('CSV ปิดเครื่องหมายคำพูดไม่ครบ');if(cell!==''||row.length){row.push(cell);rows.push(row)}return rows;
+}
+async function importFile(file){
+ try{
+  const text=await file.text();let incoming={},reviewed={},backup=null;
+  if(file.name.toLowerCase().endsWith('.json')){const data=JSON.parse(text);if(data.version!==1||data.fingerprint!==DATA.fingerprint)throw Error('ไฟล์สำรองมาจากคู่ภาพคนละชุด');incoming=validAnswers(data.answers);reviewed=data.reviewed||{};backup=data;
+   if(DATA.assistance&&backup.answerMeta)for(const [k,m] of Object.entries(backup.answerMeta)){if(!Object.prototype.hasOwnProperty.call(incoming,k)||incoming[k]!==m.mark||typeof m.verified!=='boolean')throw Error('สถานะการตรวจคำตอบในไฟล์สำรองไม่ถูกต้อง: '+k)}
+  }
+  else{const rows=parseCsv(text.replace(/^\ufeff/,''));if(!rows.length)throw Error('CSV ไม่มีข้อมูล');const header=rows.shift();const s=header.indexOf('sheet_id'),q=header.indexOf('question_no'),m=header.indexOf('ground_truth');if(s<0||q<0||m<0)throw Error('CSV ต้องมี sheet_id, question_no, ground_truth');const seen=new Set();for(const row of rows){const k=(row[s]||'').trim()+':'+(row[q]||'').trim(),v=(row[m]||'').trim().toLowerCase();if(seen.has(k))throw Error('CSV มีข้อซ้ำ: '+k);seen.add(k);incoming[k]=v}validAnswers(incoming)}
+  const entries=Object.entries(incoming).filter(([,v])=>marks.has(v)||(backup&&DATA.assistance&&v===''));const conflicts=entries.filter(([k,v])=>state.answers[k]&&state.answers[k]!==v).length;
+  if(conflicts&&!confirm('มีคำตอบต่างจากข้อมูลในเบราว์เซอร์ '+conflicts+' ข้อ ต้องการใช้คำตอบจากไฟล์ที่นำเข้าหรือไม่?'))return;
+  for(const [k,v] of entries){if(state.answers[k]!==v)state.reviewed[k.split(':')[0]]=false;state.answers[k]=v;if(DATA.assistance){if(!backup){const [s,q]=k.split(':');recordHumanChoice(s,Number(q),v)}else if(backup.answerMeta?.[k])state.answerMeta[k]=backup.answerMeta[k]}}
+  for(const [s,v] of Object.entries(reviewed)){if(v===true&&known.has(s)&&count(s)===100){state.reviewed[s]=true;if(DATA.assistance)reviewWholeSheet(s,true)}else if(DATA.assistance&&v===false&&known.has(s))state.reviewed[s]=false}
+  if(DATA.assistance&&backup){state.queueEdits=backup.queueEdits||{};state.queueDeferred=backup.queueDeferred||{};state.queueUndo=backup.queueUndo||[];state.queuePageKeys=backup.queuePageKeys||[];state.queuePageDeferred=backup.queuePageDeferred||{};state.queueActiveKey=backup.queueActiveKey||'';state.queueActionSequence=backup.queueActionSequence||0;if(backup.queueFilter){state.queueFilter=backup.queueFilter;$('queueFilter').value=backup.queueFilter}}
+  save();renderCounts();renderQuestion();notify(backup&&DATA.assistance?'กู้คืนคำตอบและสถานะการตรวจจาก JSON แล้ว '+entries.length+' รายการ':'นำเข้าแล้ว '+entries.length+' คำตอบ ช่องว่างจากไฟล์ไม่ลบคำตอบเดิม');
+ }catch(e){notify('นำเข้าไม่สำเร็จ: '+e.message)}
+}
+$('restore').onclick=()=>$('importFile').click();$('importFile').onchange=async e=>{if(e.target.files[0])await importFile(e.target.files[0]);e.target.value=''};
+window.addEventListener('storage',e=>{if(e.key===key&&e.newValue){try{const v=JSON.parse(e.newValue);validAnswers(v.answers);state.answers=v.answers;state.reviewed=v.reviewed||{};state.correctionsApplied=v.correctionsApplied||[];state.draftsSeen=v.draftsSeen||{};if(DATA.assistance){state.answerMeta=v.answerMeta||state.answerMeta;state.queueEdits=v.queueEdits||{};state.queueDeferred=v.queueDeferred||{}}renderCounts();renderQuestion();notify('อัปเดตคำตอบจากอีกแท็บแล้ว')}catch{notify('อ่านการเปลี่ยนแปลงจากอีกแท็บไม่สำเร็จ โปรดสำรอง CSV')}}});
+for(const batch of proposalBatches){const option=document.createElement('option');option.value=batch.id;option.textContent=batch.sheet_ids[0]+'–'+batch.sheet_ids[batch.sheet_ids.length-1]+' ('+batch.sheet_ids.length+' แผ่น)';$('proposalBatch').append(option)}
+const newestBatch=DATA.pilot?.active_batch||proposalBatches[0]?.id;
+if(newestBatch&&state.lastAnnouncedBatch!==newestBatch&&!DATA.assistance){state.lastAnnouncedBatch=newestBatch;state.proposalBatch=newestBatch;const batch=currentBatch();state.sheet=batch.sheet_ids.find(id=>count(id)<100)||batch.sheet_ids[0];state.question=1}
+/* __ANSWER_ASSISTANCE__ */
+installAssistance();
+showSheet();if(storageOkay)save();
+</script>
+</body>
+</html>

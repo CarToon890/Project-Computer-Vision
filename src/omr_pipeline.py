@@ -12,7 +12,6 @@ import random
 import time
 from pathlib import Path
 
-import cv2
 import numpy as np
 import pandas as pd
 import torch
@@ -21,21 +20,11 @@ from sklearn.utils.class_weight import compute_class_weight
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
+from omr_geometry import read_image, rectify_sheet, row_crop, bubble_scores
+
 
 CLASSES = ["1", "2", "3", "4", "5", "blank", "multiple", "ambiguous"]
 CLASS_TO_INDEX = {label: index for index, label in enumerate(CLASSES)}
-PAGE_WIDTH, PAGE_HEIGHT = 720, 1000
-OPTION_X = [
-    [0.195, 0.215, 0.236, 0.257, 0.279],
-    [0.349, 0.370, 0.390, 0.411, 0.432],
-    [0.502, 0.523, 0.545, 0.566, 0.589],
-    [0.657, 0.679, 0.701, 0.723, 0.745],
-]
-ROW_Y = [
-    0.285 + block * 0.103 + in_block * 0.0165
-    for block in range(5)
-    for in_block in range(5)
-]
 
 
 def set_seed(seed: int) -> None:
@@ -44,99 +33,6 @@ def set_seed(seed: int) -> None:
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
-
-
-def order_points(points: np.ndarray) -> np.ndarray:
-    rect = np.zeros((4, 2), dtype=np.float32)
-    sums = points.sum(axis=1)
-    diffs = np.diff(points, axis=1).reshape(-1)
-    rect[0] = points[np.argmin(sums)]
-    rect[2] = points[np.argmax(sums)]
-    rect[1] = points[np.argmin(diffs)]
-    rect[3] = points[np.argmax(diffs)]
-    return rect
-
-
-def find_page_quad(gray: np.ndarray) -> np.ndarray | None:
-    height, width = gray.shape[:2]
-    scale = min(1.0, 1200 / max(height, width))
-    small = cv2.resize(gray, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA) if scale < 1 else gray
-    blurred = cv2.GaussianBlur(small, (5, 5), 0)
-    edges = cv2.Canny(blurred, 45, 150)
-    edges = cv2.dilate(edges, np.ones((5, 5), np.uint8), iterations=1)
-    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    image_area = small.shape[0] * small.shape[1]
-    for contour in sorted(contours, key=cv2.contourArea, reverse=True)[:20]:
-        area = cv2.contourArea(contour)
-        if area < image_area * 0.30:
-            continue
-        perimeter = cv2.arcLength(contour, True)
-        polygon = cv2.approxPolyDP(contour, 0.02 * perimeter, True)
-        if len(polygon) == 4 and cv2.isContourConvex(polygon):
-            return order_points(polygon.reshape(4, 2).astype(np.float32) / scale)
-    return None
-
-
-def read_image(path: Path, conversion_map: dict[str, str], data_root: Path) -> np.ndarray:
-    source = path
-    if path.suffix.lower() in {".heic", ".heif"}:
-        try:
-            relative = path.resolve().relative_to(data_root.resolve()).as_posix()
-        except ValueError:
-            relative = path.as_posix()
-        normalized = conversion_map.get(relative)
-        if not normalized:
-            raise ValueError(f"HEIC image has no normalized JPEG mapping: {path}")
-        source = data_root / normalized
-    buffer = np.fromfile(source, dtype=np.uint8)
-    image = cv2.imdecode(buffer, cv2.IMREAD_COLOR)
-    if image is None:
-        raise ValueError(f"Could not decode image: {source}")
-    if image.shape[0] < image.shape[1]:
-        image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
-    return image
-
-
-def rectify_sheet(image: np.ndarray) -> tuple[np.ndarray, str]:
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    corners = find_page_quad(gray)
-    if corners is None:
-        raise ValueError("Could not find the paper boundary; review or recapture this image.")
-    destination = np.array(
-        [[0, 0], [PAGE_WIDTH - 1, 0], [PAGE_WIDTH - 1, PAGE_HEIGHT - 1], [0, PAGE_HEIGHT - 1]],
-        dtype=np.float32,
-    )
-    transform = cv2.getPerspectiveTransform(corners, destination)
-    warped = cv2.warpPerspective(image, transform, (PAGE_WIDTH, PAGE_HEIGHT))
-    return cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY), "rectified"
-
-
-def centers_for_question(question_no: int) -> tuple[list[tuple[int, int]], int, int]:
-    q = question_no - 1
-    column = q // 25
-    local = q % 25
-    y = int(ROW_Y[local] * PAGE_HEIGHT)
-    centers = [(int(x * PAGE_WIDTH), y) for x in OPTION_X[column]]
-    return centers, column, local
-
-
-def bubble_scores(gray: np.ndarray, question_no: int) -> np.ndarray:
-    centers, _, _ = centers_for_question(question_no)
-    scores = []
-    center_radius, outer_radius = 4, 8
-    yy, xx = np.ogrid[-outer_radius : outer_radius + 1, -outer_radius : outer_radius + 1]
-    distance = np.sqrt(xx * xx + yy * yy)
-    center_mask = distance <= center_radius
-    ring_mask = (distance >= center_radius + 1) & (distance <= outer_radius)
-    for cx, cy in centers:
-        patch = gray[cy - outer_radius : cy + outer_radius + 1, cx - outer_radius : cx + outer_radius + 1]
-        if patch.shape != center_mask.shape:
-            scores.append(0.0)
-            continue
-        mean_center = float(patch[center_mask].mean())
-        mean_ring = float(patch[ring_mask].mean())
-        scores.append((mean_ring - mean_center) / 255.0)
-    return np.asarray(scores, dtype=np.float32)
 
 
 def cla_label(scores: np.ndarray, fill_threshold: float, margin_threshold: float) -> tuple[str, float]:
@@ -152,17 +48,6 @@ def cla_label(scores: np.ndarray, fill_threshold: float, margin_threshold: float
     return str(int(order[0]) + 1), margin
 
 
-def row_crop(gray: np.ndarray, question_no: int) -> np.ndarray:
-    centers, _, _ = centers_for_question(question_no)
-    radius_y, radius_x = 14, 14
-    x1 = max(0, centers[0][0] - radius_x)
-    x2 = min(PAGE_WIDTH, centers[-1][0] + radius_x + 1)
-    y = centers[0][1]
-    y1, y2 = max(0, y - radius_y), min(PAGE_HEIGHT, y + radius_y + 1)
-    crop = gray[y1:y2, x1:x2]
-    return cv2.resize(crop, (160, 32), interpolation=cv2.INTER_AREA)
-
-
 def make_examples(
     inventory: pd.DataFrame,
     labels: pd.DataFrame,
@@ -171,6 +56,13 @@ def make_examples(
     conversion_map: dict[str, str],
 ) -> tuple[np.ndarray, np.ndarray, pd.DataFrame, pd.DataFrame]:
     verified = inventory[inventory["pair_status"].eq("verified")].copy()
+    holds_path = data_root / "data/metadata/pairing_review_holds.csv"
+    if holds_path.exists():
+        holds = pd.read_csv(holds_path, keep_default_na=False)
+        pending = set(holds.loc[holds["review_status"].eq("pending"), "sheet_id"])
+        held_sheets = pending & set(verified["sheet_id"])
+        if held_sheets:
+            raise ValueError(f"Resolve A/B pairing review before training: {sorted(held_sheets)}")
     if verified.empty:
         raise ValueError("No verified A/B pairs. Review pair_decisions.csv and apply it first.")
     pair_counts = verified.groupby("sheet_id")["capture_role"].agg(lambda values: sorted(values.tolist()))
@@ -195,7 +87,7 @@ def make_examples(
         cla_start = len(cla_records)
         try:
             raw = read_image(source, conversion_map, data_root)
-            gray, _ = rectify_sheet(raw)
+            gray, centers, registration = rectify_sheet(raw, source_sheet_id=sheet_id)
         except Exception as error:
             failures.append({"image_id": image["image_id"], "path": str(source), "error": str(error)})
             continue
@@ -209,9 +101,9 @@ def make_examples(
                 target = str(raw_target).strip().lower()
             if target not in CLASS_TO_INDEX:
                 raise ValueError(f"Missing/invalid ground truth for {sheet_id} question {question_no}: {target!r}")
-            crops.append(row_crop(gray, question_no))
+            crops.append(row_crop(gray, question_no, centers))
             targets.append(CLASS_TO_INDEX[target])
-            scores = bubble_scores(gray, question_no)
+            scores = bubble_scores(gray, question_no, centers)
             cla_records.append(
                 {
                     "sheet_id": sheet_id,
@@ -219,6 +111,8 @@ def make_examples(
                     "capture_role": image["capture_role"],
                     "split": split,
                     "ground_truth": target,
+                    "registration_mode": registration['mode'],
+                    "reference_sheet": registration.get('reference_sheet', ''),
                     "scores": scores,
                 }
             )
@@ -230,6 +124,8 @@ def make_examples(
                     "split": split,
                     "ground_truth": target,
                     "image_id": image["image_id"],
+                    "registration_mode": registration['mode'],
+                    "reference_sheet": registration.get('reference_sheet', ''),
                 }
             )
         image_seconds = time.perf_counter() - image_started

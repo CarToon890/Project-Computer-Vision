@@ -1,0 +1,32 @@
+{
+  "model_type": "RowCNN-v1",
+  "weights_file": "row_cnn.pt",
+  "weights_sha256": "7d407cdb8e3bda91a77c2a2949a3741a402defeedacb79a50af7378d7d57381d",
+  "classes": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "blank",
+    "multiple",
+    "ambiguous"
+  ],
+  "input_shape": [
+    1,
+    32,
+    160
+  ],
+  "pixel_scale": 255.0,
+  "cnn_confidence_cutoff": 0.9511143565177917,
+  "cla_fill_threshold": 0.1713793103448276,
+  "cla_margin_threshold": 0.02,
+  "final_dataset_pairs": 270,
+  "training_pilot_sheets": 38,
+  "training_human_labels": 3800,
+  "annotation_mode": "omr_assisted",
+  "independent_evaluation": false,
+  "prediction_label_status": "model_draft",
+  "automatic_ground_truth_promotion": false,
+  "source_evaluation_sha256": "91d4b3b0d777725beae802066c63ed985daf925749a98a7ca13e332e699ab447"
+}

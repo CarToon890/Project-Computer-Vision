@@ -18,10 +18,23 @@ Dataset-Computer-vision/
 /data/metadata/*_before_*.csv
 /data/metadata/pair_review_progress*.json
 /data/metadata/answer_labels.csv
+/data/metadata/answer_labels_codex_draft.csv
+/data/metadata/answer_label_corrections.csv
+/data/metadata/pairing_review_holds.csv
+/data/metadata/answer_pairing_migrations.json
+/data/metadata/answer_review_workload.json
+/data/metadata/answer_review_assets/
+/data/metadata/retired_sheet_ids.csv
+/data/metadata/additional_capture_images.csv
+/data/metadata/unpaired_images.csv
 /data/metadata/sheet_splits.csv
 /data/metadata/heic_conversion_map.csv
 /data/metadata/pair_review.html
 /data/metadata/review_thumbnails/
+/data/metadata/answer_review.html
+/data/metadata/annotation_previews/
+/data/metadata/answer_pilot_proposals.json
+/data/metadata/answer_pilot_assets/
 /data/normalized_images/
 
 # Local build/inspection outputs
@@ -31,3 +44,6 @@ __pycache__/
 *.py[cod]
 
 .local_cv_deps/
+.local_model_deps/
+*.pt
+/output/app_runs/

@@ -1,0 +1,44 @@
+{
+  "model_type": "RowCNN-v1",
+  "weights_file": "row_cnn.pt",
+  "weights_sha256": "aa8a4c260b9ebc86ba6ce8159ee95e6891a9ca7a29cc7198e3afc79662da1a82",
+  "classes": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "blank",
+    "multiple",
+    "ambiguous"
+  ],
+  "input_shape": [
+    1,
+    32,
+    160
+  ],
+  "pixel_scale": 255.0,
+  "cnn_confidence_cutoff": 0.557031512260437,
+  "cla_fill_threshold": 0.1713793103448276,
+  "cla_margin_threshold": 0.02,
+  "final_dataset_pairs": 270,
+  "annotation_mode": "human_inspected_omr_assisted",
+  "independent_evaluation": false,
+  "prediction_label_status": "model_draft",
+  "automatic_ground_truth_promotion": false,
+  "source_evaluation_sha256": "91d4b3b0d777725beae802066c63ed985daf925749a98a7ca13e332e699ab447",
+  "model_version": "confirmed-finetune-v2+perspective-fixed-policy",
+  "selected_epoch": 9,
+  "selected_on": "validation",
+  "training_confirmed_questions": 3259,
+  "validation_confirmed_questions": 400,
+  "training_sheets": 178,
+  "test_used_for_model_selection": false,
+  "baseline_pilot_provenance": {
+    "training_pilot_sheets": 38,
+    "training_human_labels": 3800
+  },
+  "preprocessing_version": "answer-plane-perspective-v1",
+  "geometry_sha256": "650c3dbe18d404c0a926aa1b5bbcc6c5106fb4bfb2e76d62475ff4da31687ad9",
+  "decision_policy": "Frozen CNN cutoff and CLA fill/margin from the previously validated v2 profile; only preprocessing changed."
+}

@@ -1,0 +1,9 @@
+{
+  "weights_unchanged": true,
+  "weights_sha256": "aa8a4c260b9ebc86ba6ce8159ee95e6891a9ca7a29cc7198e3afc79662da1a82",
+  "preprocessing_version": "answer-plane-perspective-v1",
+  "geometry_sha256": "650c3dbe18d404c0a926aa1b5bbcc6c5106fb4bfb2e76d62475ff4da31687ad9",
+  "evaluation_folder": "presentation_build/system_test_270_perspective_fixed",
+  "decision_parameters_frozen_from": "models/retrained_v2/model_config.json",
+  "canonical_labels_written": false
+}
