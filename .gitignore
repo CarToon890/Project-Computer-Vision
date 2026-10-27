@@ -45,5 +45,11 @@ __pycache__/
 
 .local_cv_deps/
 .local_model_deps/
+.local_cloud_deps/
+.env*
+!.env.example
+.vercel/
+node_modules/
+.next/
 *.pt
 /output/app_runs/

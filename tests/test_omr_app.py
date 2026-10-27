@@ -83,6 +83,21 @@ class RuntimeTests(unittest.TestCase):
         text='question_no,answer\n'+'\n'.join(f'{q},{q%5+1}' for q in range(1,101))
         self.assertEqual(len(parse_exam_key('custom',text)),100)
 
+    def test_default_model_prefers_v3_and_explicit_override_still_works(self):
+        with tempfile.TemporaryDirectory(dir=ROOT/'presentation_build') as temporary:
+            root=Path(temporary);meta=root/'data/metadata';meta.mkdir(parents=True)
+            (meta/'image_inventory_verified.csv').write_text('sheet_id,capture_role,pair_status,relative_path\n')
+            for name in ('retrained_v3_verified','retrained_v2_perspective'):
+                folder=root/'models'/name;folder.mkdir(parents=True)
+                (folder/'model_config.json').write_text(json.dumps(CONFIG))
+            with patch('omr_app.load_trained_model',return_value=(None,'cpu')):
+                app=OMRApplication(root,root/'runs')
+                self.assertEqual(app.model_dir,root/'models/retrained_v3_verified')
+                app.executor.shutdown(wait=True)
+                app=OMRApplication(root,root/'runs2',root/'models/retrained_v2_perspective')
+                self.assertEqual(app.model_dir,root/'models/retrained_v2_perspective')
+                app.executor.shutdown(wait=True)
+
 
 class HTTPTests(unittest.TestCase):
     def test_upload_read_review_demo_score_export_and_invalid_image(self):

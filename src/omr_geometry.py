@@ -37,6 +37,10 @@ def read_image(path: Path, conversion_map: dict[str, str], data_root: Path) -> n
 @lru_cache(maxsize=1)
 def train_references():
     """Precomputed geometry from other Train sheets; no answer labels are read."""
+    portable = reader.META / 'form_references.npz'
+    if portable.is_file():
+        from omr_form_references import load_references
+        return load_references(portable)[1]
     with (reader.META / 'sheet_splits.csv').open(encoding='utf-8-sig', newline='') as f:
         train = {r['sheet_id'] for r in csv.DictReader(f) if r['split'] == 'train'}
     with (reader.META / 'image_inventory_verified.csv').open(encoding='utf-8-sig', newline='') as f:

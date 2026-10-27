@@ -1,6 +1,6 @@
 // Tentative machine labels and inspected answers have separate provenance.
 let visibleReviewKeys=[];
-let queueKeyboardActive=true;
+let queueKeyboardActive=false;
 const queueCardElements=new Map();
 function humanVerified(sheet,q){
  const k=sheet+':'+q,v=value(sheet,q);if(!v||isHeld(sheet))return false;
@@ -32,7 +32,7 @@ function installAssistance(){
  const queue=DATA.assistance.queue,risk=queue.filter(e=>e.kind==='risk').length,sample=queue.filter(e=>e.kind==='sample').length;
  $('reviewWorkflowTitle').textContent='ตรวจเฉพาะจุดสำคัญ · คิว '+queue.length.toLocaleString()+' ข้อ';
  for(const option of $('queueFilter').options||[]){if(option.value==='risk')option.textContent=risk+' ข้อเสี่ยง';else if(option.value==='sample')option.textContent=sample+' ข้อสุ่ม'}
- $('reviewInstructions').textContent='ระบบเติมเฉพาะร่างที่ผ่านเกณฑ์ความมั่นใจตั้งแต่ '+DATA.assistance.start+' คิวนี้มี '+risk+' ข้อเสี่ยงและ '+sample+' ข้อสุ่ม ตรวจครั้งละ 10 ข้อ ร่างและข้อที่ยังตรวจไม่ถึงส่งออกแยกจากคำตอบที่คนตรวจแล้ว'+(DATA.assistance.removed_queue_items?.length?' · ตัดรายการของแผ่นที่เลิกใช้ '+DATA.assistance.removed_queue_items.length+' ข้อ และเก็บคิวเดิมที่เหลือไว้โดยไม่เพิ่มงานใหม่':'');
+ $('reviewInstructions').textContent='เลือกแผ่นและดูภาพ A/B เทียบกับคำตอบที่เสนอ สีเทาคือร่างที่ยังไม่ตรวจ กดคำตอบเพื่อยืนยันหรือแก้รายข้อ หลังดูครบทุกข้อจึงติ๊กตรวจทานครบแผ่น แล้วส่งออกคำตอบที่ตรวจแล้ว';
  $('export').textContent='ส่งออกคำตอบที่คนตรวจแล้ว';
  $('answerHelp').textContent='สีเขียว = คนตรวจแล้ว · สีเทา = ร่างหรือคำตอบเดิมรอรับรอง · สีขาว = ยังไม่กรอก · สีเหลือง = ดูไม่ชัด คุณยังตรวจทีละข้อด้วยปุ่มคำตอบหรือ Enter และตรวจรับรองทั้งแผ่นได้';
  state.answerMeta=state.answerMeta||{};state.queueEdits=state.queueEdits||{};state.queueDeferred=state.queueDeferred||{};
@@ -116,7 +116,7 @@ function undoQueueReview(){
 function deferReviewKey(k){state.deferredTick=(state.deferredTick||0)+1;state.queueDeferred[k]=state.deferredTick;state.queuePageDeferred=state.queuePageDeferred||{};state.queuePageDeferred[k]=true;save();renderReviewQueue()}
 function openReviewKey(k){queueKeyboardActive=false;const [s,q]=k.split(':');changeSheet(s);state.question=Number(q);save();renderQuestion();$('sheetTitle').scrollIntoView?.({behavior:'smooth',block:'start'})}
 function queueKeyTarget(){
- if(!DATA.assistance||!queueKeyboardActive)return false;
+ if(!DATA.assistance||!queueKeyboardActive||!$('legacyQueue').open)return false;
  const active=document.activeElement,tag=active?.tagName;
  if(['INPUT','SELECT','TEXTAREA'].includes(tag)||active?.isContentEditable)return false;
  return !active||tag==='BODY'||!!active.closest?.('#reviewWorkflow');

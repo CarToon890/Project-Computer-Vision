@@ -1,5 +1,32 @@
 # OMR dataset bookkeeping
 
+## Review update — 27 October 2026
+
+The user confirmed visual review of the new sheet and row confirmations in
+`answer_review_backup (1).json`, including S0295. Imported 1,833 new answers
+without overwriting existing answers or changing images, pairs, or splits.
+There are now 6,593 confirmed answers: Train 5,092, Validation 400, Test 1,101;
+57 sheets are complete and 20,407 answer slots remain unconfirmed. All new
+answers belong to Train. The backup, staged CSV, source hash and pre-import
+label backup remain local; model weights and existing evaluation are unchanged.
+The review used model-assisted drafts, so it does not establish independent
+model accuracy.
+
+The subsequent `answer_review_backup (2).json` added 168 explicit human
+confirmations from the CNN/CLA risk queue across three Train sheets. It had no
+conflicts with existing answers and no pending pair holds. The official table now
+contains 6,761 confirmed answers: Train 5,260, Validation 400, Test 1,101; 57
+sheets are complete and 20,239 slots remain unconfirmed. The input fingerprint,
+images, pairs, split, model weights and existing evaluation are unchanged.
+
+On 28 October `answer_review_backup (3).json` added 392 human confirmations
+from the model-assisted risk queue across 64 sheets, without conflicts or held
+pairs: Train 331, Validation 33, Test 28. The official table now has 7,153
+confirmed answers: Train 5,591, Validation 433, Test 1,129; 61 sheets are fully
+labeled and 19,847 slots remain unconfirmed. Historical CNN/CLA comparisons on
+these 392 selected risk cases are development diagnostics, not independent
+accuracy. No new model training or selection was performed.
+
 `image_inventory.csv` is a non-destructive inventory of the source images.
 It records the source path, contributor folder, file properties, capture time
 when available, and A/B only when the source folder explicitly names that role.

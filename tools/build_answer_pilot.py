@@ -190,6 +190,12 @@ def normalize_illumination(gray, size=61):
 @lru_cache(maxsize=1)
 def registration_reference():
     """Use an image's printed form geometry only, never its answer labels."""
+    portable = META / 'form_references.npz'
+    if portable.is_file():
+        from omr_form_references import load_references
+        centers, keys, descriptors = load_references(portable)[0]
+        # Consumers use geometry/features only; no reference photograph ships.
+        return None, centers, keys, descriptors, None
     with (META / "image_inventory_verified.csv").open(newline="", encoding="utf-8-sig") as stream:
         candidates = [r for r in csv.DictReader(stream) if r['pair_status'] == 'verified' and r['capture_role'] == 'B']
     for row in sorted(candidates, key=lambda r: r['sheet_id']):

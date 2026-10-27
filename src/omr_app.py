@@ -42,7 +42,8 @@ def save_json(path,value):
 class OMRApplication:
     def __init__(self,root=ROOT,runs=RUNS,model_dir=None):
         self.root=Path(root);self.runs=Path(runs);self.runs.mkdir(parents=True,exist_ok=True)
-        preferred=self.root/'models/retrained_v2_perspective'
+        v3=self.root/'models/retrained_v3_verified'
+        preferred=v3 if v3.is_dir() else self.root/'models/retrained_v2_perspective'
         self.model_dir=Path(model_dir or (preferred if preferred.is_dir() else self.root/'models/retrained_v2'))
         self.config=json.loads((self.model_dir/'model_config.json').read_text(encoding='utf-8'))
         if self.config['classes']!=CLASSES:raise ValueError('Model class order is incompatible.')

@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "functions": {"app/api/**/route.ts": {"maxDuration": 200}},
+  "crons": [{"path": "/api/cleanup", "schedule": "0 1 * * *"}]
+}

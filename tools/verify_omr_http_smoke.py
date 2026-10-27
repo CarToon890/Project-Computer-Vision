@@ -1,4 +1,5 @@
 """Exercise real local model, HTTP, upload, review, scoring and export."""
+import argparse
 import base64
 import csv
 import io
@@ -17,10 +18,13 @@ from omr_app import OMRApplication,handler_for
 
 
 def main():
-    output=ROOT/'presentation_build/omr_risk_policy_20261027/http_smoke.json'
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--output',type=Path,default=ROOT/'presentation_build/omr_risk_policy_20261027/http_smoke.json')
+    parser.add_argument('--model-dir',type=Path)
+    args=parser.parse_args();output=args.output
     if output.exists():raise SystemExit('Existing report preserved')
     with tempfile.TemporaryDirectory(dir=ROOT/'presentation_build') as tmp:
-        app=OMRApplication(ROOT,Path(tmp))
+        app=OMRApplication(ROOT,Path(tmp),args.model_dir)
         image=app.pairs['S0035']['A']
         source=ROOT/image['relative_path']
         payload={'image_a':{'name':source.name,'data':base64.b64encode(source.read_bytes()).decode()}}

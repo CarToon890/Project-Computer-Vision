@@ -12,15 +12,19 @@
 <body>
 <header class="top">
  <h1>กรอกคำตอบจริงบนกระดาษ</h1>
- <p id="global"></p><p id="draftSummary" class="pilot-stat"></p><p id="pilotStats" class="pilot-stat"></p>
+ <p id="global"></p><p id="draftSummary" class="pilot-stat"></p>
  <div class="toolbar"><progress id="progress" value="0"></progress><span id="saved" class="status"></span></div>
  <div class="toolbar">
   <button id="prev">← แผ่นก่อน</button><select id="sheet" class="sheetnav" aria-label="เลือกแผ่น"></select><button id="next">แผ่นถัดไป →</button>
-  <button id="nextOpen">ไปแผ่นที่ยังไม่ครบ</button><label id="batchControls">ชุดอ่านอัตโนมัติ <select id="proposalBatch" aria-label="เลือกชุดคำตอบเสนอ"></select></label><button id="jumpBatch">เริ่ม/ทำต่อชุดนี้</button>
-  <button id="export" class="primary batch">ส่งออก answer_labels_review.csv</button><button id="exportPilot" class="hidden">ส่งออกผลตรวจชุดนี้</button><button id="backup">สำรอง JSON</button><button id="restore">นำเข้า CSV / JSON</button>
+  <button id="nextOpen">ไปแผ่นที่ยังต้องตรวจ</button>
+  <button id="export" class="primary batch">ส่งออก answer_labels_review.csv</button><button id="backup">สำรอง JSON</button>
   <input id="importFile" type="file" accept=".csv,.json" class="hidden">
  </div>
+ <details class="extra-tools"><summary>เครื่องมือเพิ่มเติม</summary>
+  <p id="pilotStats" class="pilot-stat"></p><div class="toolbar"><button id="restore">นำเข้า CSV / JSON</button><label id="batchControls">ชุดอ่านอัตโนมัติ <select id="proposalBatch" aria-label="เลือกชุดคำตอบเสนอ"></select></label><button id="jumpBatch">เริ่ม/ทำต่อชุดนี้</button><button id="exportPilot" class="hidden">ส่งออกผลตรวจชุดนี้</button></div>
+ </details>
 </header>
+<details id="legacyQueue" class="extra-queue"><summary>คิวตรวจเฉพาะจุดเดิม · เครื่องมือเพิ่มเติม</summary>
 <section id="reviewWorkflow" class="hidden review-workflow">
  <h2 id="reviewWorkflowTitle">ตรวจเฉพาะจุดสำคัญ · คิวตรวจคำตอบ</h2>
  <p>เก็บงานเดิมถึง S0038 เริ่มร่างอัตโนมัติจาก S0039 ร่าง OMR ยังไม่ใช่คำตอบที่คนตรวจแล้ว</p>
@@ -29,6 +33,15 @@
  <p>ตรวจภาพแล้วกด 1–5 ครั้งเดียวเพื่อบันทึก หรือกด “ถูกแล้ว” เพื่อรับคำตอบเดิม ครบชุดจะขึ้นชุดถัดไปให้ การสุ่มใช้ค้นหาจุดผิด ไม่ได้รับรองคำตอบที่เหลือทั้งหมด</p>
  <div class="queue-dock"><div class="toolbar"><button id="confirmQueuePage" class="primary">ตรวจครบแล้ว ยืนยันข้อที่แสดง · Ctrl+Enter</button><button id="undoQueue">ย้อนกลับ · Ctrl+Z</button><button id="focusQueue">ใช้คีย์ลัดคิว</button><strong id="queueActive"></strong></div><p>1–5 / B / M / U = บันทึกทันที · Enter = ถูกแล้ว · ลูกศร = เปลี่ยนข้อ · S = พัก · Esc = ออกจากคีย์ลัดคิว</p></div>
  <div id="queueCards" class="queue-cards"></div>
+</section>
+</details>
+<section id="riskReview" class="review-workflow hidden" aria-labelledby="riskReviewTitle">
+ <h2 id="riskReviewTitle">ช่วยตรวจคำตอบจาก CNN และ CLA</h2>
+ <p>เริ่มจากข้อที่ผลอ่านขัดแย้งหรือไม่ชัด หรือสุ่มตรวจข้อที่ผลอ่านสอดคล้องกัน การสอดคล้องไม่ได้รับประกันว่าถูก</p>
+ <p id="riskReviewSummary" class="pilot-stat"></p>
+ <div class="toolbar"><label>เลือกคิว <select id="riskReviewFilter"><option value="risk">ข้อที่ควรตรวจ</option><option value="sample">สุ่มตรวจข้อที่ผลสอดคล้อง</option><option value="agreement">ข้ออื่นที่ผลสอดคล้อง</option></select></label><button id="focusRiskReview" type="button">ใช้คีย์ลัดคิวนี้</button><strong id="riskReviewActive" aria-live="polite"></strong><button id="riskReviewRefresh">อัปเดตคิว</button><button id="riskReviewExport">ส่งออกผลสุ่มตรวจ</button><button id="riskReviewExportDrafts">ส่งออกคำตอบอัตโนมัติสำหรับทดลอง Train</button></div>
+ <p class="pilot-stat">คลิกการ์ดหรือกด “ใช้คีย์ลัดคิวนี้” · 1–5 เลือกคำตอบ · B เว้นว่าง · M หลายช่อง · U ไม่ชัด · ลูกศรเปลี่ยนข้อ · Enter ยืนยันคำตอบ CNN หลังดูภาพ · Esc ออกจากคีย์ลัด คิวสุ่มต้องเลือกคำตอบเอง</p>
+ <p id="riskReviewNote" class="pilot-stat"></p><div id="riskReviewCards" class="queue-cards"></div>
 </section>
 <div id="reviewInstructions" class="notice"><strong>ตรวจคำตอบเสนอทีละชุด:</strong> ดูภาพแถวคำตอบและภาพ A/B ถ้าคำตอบเสนอตรงกับรอยฝน ให้กด “ยืนยันคำตอบเสนอ” หรือ Enter ถ้าไม่ตรงให้เลือกค่าที่เห็นจริงด้านล่าง คำตอบเสนอจะยังไม่ถูกกรอกจนกว่าจะยืนยัน เมื่อครบ 100 ข้อให้ติ๊กตรวจทานครบแผ่น แล้วส่งออก CSV และผลตรวจชุดนี้ แผ่นที่ระบบอ่านไม่ได้ให้กรอกจากภาพเอง</div>
 <div id="message" role="status" aria-live="polite"></div>
@@ -47,8 +60,8 @@
    <button class="other" data-mark="blank">ไม่ได้ฝนคำตอบ · blank (B)</button><button class="other" data-mark="multiple">ฝนหลายช่อง · multiple (M)</button><button class="other" data-mark="ambiguous">ดูไม่ชัด / ไม่แน่ใจ · ambiguous (U)</button>
   </div>
   <div id="answerState" class="answer-state"></div>
-  <div class="toolbar"><button id="clearQ">ล้างคำตอบข้อนี้</button><button id="nextEmpty">ข้อที่ยังไม่ได้กรอก</button></div>
-  <label class="options"><input id="autoNext" type="checkbox" checked> เลือกแล้วเลื่อนไปข้อถัดไป</label>
+  <div class="toolbar"><button id="clearQ">ล้างคำตอบข้อนี้</button><button id="nextEmpty">ไปข้อที่ยังไม่ตรวจ</button></div>
+  <label class="options"><input id="autoNext" type="checkbox" checked> ยืนยันแล้วไปข้อที่ยังไม่ตรวจโดยอัตโนมัติ</label>
   <div id="questions" class="questions" aria-label="ข้อ 1 ถึง 100"></div>
   <label class="review"><input id="reviewed" type="checkbox"> ตรวจทานครบแผ่นแล้ว</label>
   <p id="answerHelp" class="help">ปุ่มข้อสีเขียว = กรอกแล้ว · สีเหลือง = ดูไม่ชัด · สีขาว = ยังไม่ได้กรอก<br>คีย์ลัด: 1–5, B, M, U · ลูกศรซ้าย/ขวาเปลี่ยนข้อ<br>ใช้ทั้ง A/B ดูรอยฝน หากแยกไม่ออกให้เลือก ambiguous ไว้ตรวจทาน สามารถกลับมาแก้ได้ทุกข้อ</p>
@@ -58,6 +71,7 @@
 <style>.questions button.machine-draft{background:#e8edf4;color:#526576}.queue-dock{position:sticky;top:0;z-index:20;background:#fff;border:1px solid #b7cbd9;border-radius:7px;padding:10px;margin:12px 0;box-shadow:0 3px 12px #17212b18}.queue-dock .toolbar{margin:0}.queue-dock p{margin:7px 0 0;font-size:12px}.queue-cards,.queue-card{scroll-margin-top:140px}.queue-card.queue-active{outline:3px solid #174a6e;outline-offset:1px}.queue-card.queue-done{background:#edf7ef;border-color:#8ab793}.queue-card.queue-deferred{background:#f3f3f3}.queue-answer-buttons{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:10px 0}.queue-answer-buttons button{min-height:48px;padding:8px;font-size:21px;font-weight:600;touch-action:manipulation}.queue-answer-buttons button.selected{border:2px solid #174a6e;background:#e3eff7;color:#163e5b}.queue-answer-buttons button.queue-special{grid-column:span 5;font-size:13px;min-height:36px;padding:5px}.queue-accept{min-height:44px;flex:1;font-weight:600}.queue-choice-state{font-weight:600}</style>
 <style>.queue-answer-buttons{grid-template-columns:repeat(15,minmax(0,1fr))}.queue-answer-buttons button{grid-column:span 3}.queue-answer-buttons button.queue-special{grid-column:span 5;font-size:12px;line-height:1.3;min-height:40px}@media(max-width:800px){.queue-cards,.queue-card{scroll-margin-top:230px}}</style>
 <style>.queue-choice-state{min-height:4.5em;line-height:1.5}</style>
+<style>.queue-card.risk-active{outline:3px solid #174a6e;outline-offset:2px}.queue-answer-buttons button.risk-suggested{background:#fff1bd;border:3px solid #a66a00;color:#5a3900;font-weight:700}.risk-cnn-label{color:#754900;font-weight:700}</style>
 <script id="annotation-data" type="application/json">__ANNOTATION_DATA__</script>
 <script>
 'use strict';
@@ -100,6 +114,9 @@ const isHeld=sheet=>Object.prototype.hasOwnProperty.call(DATA.pairing_holds||{},
 const value=(sheet,q)=>state.answers[sheet+':'+q]||'';
 const exportableValue=(sheet,q)=>DATA.assistance?(humanVerified(sheet,q)?value(sheet,q):''):(isHeld(sheet)||(DATA.drafts?.sheets?.[sheet]&&!state.reviewed[sheet])?'':value(sheet,q));
 const count=sheet=>isHeld(sheet)?0:Array.from({length:100},(_,i)=>value(sheet,i+1)).filter(Boolean).length;
+const needsInspection=(sheet,q)=>!isHeld(sheet)&&(DATA.assistance?!humanVerified(sheet,q):!value(sheet,q));
+const pendingCount=sheet=>isHeld(sheet)?0:Array.from({length:100},(_,i)=>needsInspection(sheet,i+1)).filter(Boolean).length;
+function nextPendingQuestion(sheet,after){for(let offset=1;offset<=100;offset++){const q=((after-1+offset)%100)+1;if(needsInspection(sheet,q))return q}return null}
 const textMark=v=>({'blank':'ไม่ได้ฝนคำตอบ','multiple':'ฝนหลายช่อง','ambiguous':'ดูไม่ชัด / ไม่แน่ใจ'}[v]||v);
 const currentBatch=()=>proposalBatches.find(b=>b.id===state.proposalBatch)||proposalBatches[0]||null;
 const batchForSheet=sheet=>proposalBatches.find(b=>b.sheet_ids.includes(sheet));
@@ -156,14 +173,15 @@ function renderCounts(){
  $('pairRepairLink').onclick=DATA.repair_sheet?e=>{e.preventDefault();changeSheet(DATA.repair_sheet);$('sheetTitle').scrollIntoView?.({behavior:'smooth',block:'start'})}:null;
  $('pairHoldNotice').classList.toggle('hidden',!isHeld(state.sheet));$('pairHoldNotice').textContent=isHeld(state.sheet)?'พักกรอกแผ่นนี้: กำลังแก้การจับคู่ A/B กรุณาตรวจคู่ใหม่ก่อน':'';
  let total=0,done=0,reviewed=0;for(const sheet of sheets){const n=count(sheet.id);total+=n;if(n===100)done++;if(n===100&&state.reviewed[sheet.id])reviewed++}
- $('global').textContent='กรอกแล้ว '+total.toLocaleString()+' / '+(sheets.length*100).toLocaleString()+' คำตอบ · ครบ 100 ข้อ '+done+' / '+sheets.length+' แผ่น · ตรวจทานแล้ว '+reviewed+' แผ่น';
+ const inspected=DATA.assistance?sheets.reduce((sum,s)=>sum+(isHeld(s.id)?0:100-pendingCount(s.id)),0):total;
+ $('global').textContent=DATA.assistance?'มีคำตอบแล้ว '+total.toLocaleString()+' / '+(sheets.length*100).toLocaleString()+' ข้อ (รวมร่าง) · คนตรวจแล้ว '+inspected.toLocaleString()+' ข้อ · ตรวจทานครบแผ่น '+reviewed+' / '+sheets.length+' แผ่น':'กรอกแล้ว '+total.toLocaleString()+' / '+(sheets.length*100).toLocaleString()+' คำตอบ · ครบ 100 ข้อ '+done+' / '+sheets.length+' แผ่น · ตรวจทานแล้ว '+reviewed+' แผ่น';
  const pendingDrafts=Object.keys(DATA.drafts?.sheets||{}).filter(id=>!state.reviewed[id]);
  $('draftSummary').textContent=pendingDrafts.length?'มีร่างที่ Codex อ่านจากภาพ '+pendingDrafts.length+' แผ่น รอคุณตรวจรับรอง ร่างที่ยังไม่รับรองจะไม่ถูกส่งออกเป็นคำตอบจริง':'';
  const draft=DATA.drafts?.sheets?.[state.sheet];$('draftNotice').classList.toggle('hidden',!draft);$('nextDraftFlag').classList.toggle('hidden',!draft?.review_questions?.length);
  if(draft){$('draftNotice').textContent=state.reviewed[state.sheet]?'คุณตรวจรับรองร่างแผ่นนี้แล้ว':'กรอกจากภาพโดย Codex · ยังรอคุณตรวจรับรอง ตรวจและแก้ได้ทุกข้อ แล้วติ๊ก “ตรวจทานครบแผ่นแล้ว” เพื่อรวมคำตอบแผ่นนี้ใน CSV';$('nextDraftFlag').textContent='ไปข้อที่แนะนำให้ตรวจ ('+draft.review_questions.length+' ข้อ)'}
  $('progress').max=sheets.length*100;$('progress').value=total;
- for(const option of $('sheet').options){const n=count(option.value);option.textContent=option.value+' · '+n+'/100'+(state.reviewed[option.value]&&n===100?' · ตรวจแล้ว':'')}
- $('sheet').value=state.sheet;const n=count(state.sheet);$('sheetCount').textContent='แผ่นนี้กรอกแล้ว '+n+'/100 ข้อ';$('reviewed').disabled=n!==100;$('reviewed').checked=n===100&&!!state.reviewed[state.sheet];renderPilotStats();if(DATA.assistance)renderAssistance();
+ for(const option of $('sheet').options){const n=count(option.value);option.textContent=option.value+(isHeld(option.value)?' · พักตรวจ':' · มีคำตอบ '+n+'/100')+(state.reviewed[option.value]&&n===100?' · ตรวจครบแผ่น':'')}
+ $('sheet').value=state.sheet;const n=count(state.sheet);$('sheetCount').textContent=isHeld(state.sheet)?'แผ่นนี้พักตรวจ':DATA.assistance?'มีคำตอบ '+n+'/100 ข้อ (รวมร่าง) · คนตรวจแล้ว '+(100-pendingCount(state.sheet))+' ข้อ':'แผ่นนี้กรอกแล้ว '+n+'/100 ข้อ';$('reviewed').disabled=n!==100;$('reviewed').checked=n===100&&!!state.reviewed[state.sheet];renderPilotStats();if(DATA.assistance)renderAssistance();
 }
 function renderQuestion(){
  const v=value(state.sheet,state.question),held=isHeld(state.sheet);$('questionNo').textContent='ข้อ '+state.question;
@@ -183,9 +201,9 @@ function choose(mark){
  if(isHeld(state.sheet)){notify('แผ่นนี้พักกรอกระหว่างแก้คู่ A/B');return}
  const q=state.question;state.answers[state.sheet+':'+q]=mark;state.reviewed[state.sheet]=false;
  if(DATA.assistance)recordHumanChoice(state.sheet,q,mark);
- if(mark&&$('autoNext').checked&&state.question<100)state.question++;
+ if(mark&&$('autoNext').checked){const next=DATA.assistance?nextPendingQuestion(state.sheet,q):(q<100?q+1:null);if(next!==null)state.question=next}
  save();renderCounts();renderQuestion();
- if(mark)notify('บันทึก '+state.sheet+' ข้อ '+q+' = '+textMark(mark)+(state.question!==q?' · ไปข้อ '+state.question:' · ครบข้อสุดท้ายของแผ่น'));
+ if(mark)notify('บันทึก '+state.sheet+' ข้อ '+q+' = '+textMark(mark)+(state.question!==q?' · ไปข้อ '+state.question:DATA.assistance&&pendingCount(state.sheet)===0?' · ไม่มีข้อรอตรวจในแผ่นนี้':' · อยู่ที่ข้อเดิม'));
 }
 for(const s of sheets){const o=document.createElement('option');o.value=s.id;$('sheet').append(o)}
 for(let q=1;q<=100;q++){const b=document.createElement('button');b.dataset.question=q;b.textContent=q;b.onclick=()=>{state.question=q;save();renderQuestion()};$('questions').append(b)}
@@ -196,16 +214,17 @@ $('sheet').onchange=()=>changeSheet($('sheet').value);
 $('proposalBatch').onchange=()=>{state.proposalBatch=$('proposalBatch').value;jumpToBatch()};$('jumpBatch').onclick=jumpToBatch;
 $('prev').onclick=()=>changeSheet(sheets[sheets.indexOf(current())-1]?.id);
 $('next').onclick=()=>changeSheet(sheets[sheets.indexOf(current())+1]?.id);
-$('nextOpen').onclick=()=>{const i=sheets.indexOf(current());const ordered=[...sheets.slice(i+1),...sheets.slice(0,i+1)];const s=ordered.find(s=>count(s.id)<100);s?changeSheet(s.id):notify('กรอกครบทุกแผ่นแล้ว โปรดตรวจทานและส่งออก CSV')};
+$('nextOpen').onclick=()=>{const i=sheets.indexOf(current());const ordered=[...sheets.slice(i+1),...sheets.slice(0,i+1)];const s=ordered.find(s=>pendingCount(s.id)>0);if(!s){notify('ไม่มีข้อรอตรวจในแผ่นที่เปิดให้ตรวจ');return}changeSheet(s.id);const q=needsInspection(s.id,1)?1:nextPendingQuestion(s.id,1);if(q!==null){state.question=q;save();renderQuestion()}};
 function stepQuestion(delta){state.question=Math.max(1,Math.min(100,state.question+delta));save();renderQuestion()}
 $('prevQ').onclick=()=>stepQuestion(-1);$('nextQ').onclick=()=>stepQuestion(1);$('clearQ').onclick=()=>choose('');
-$('nextEmpty').onclick=()=>{for(let i=1;i<=100;i++){const q=((state.question-1+i)%100)+1;if(!value(state.sheet,q)){state.question=q;save();renderQuestion();return}}notify('แผ่นนี้กรอกครบ 100 ข้อแล้ว')};
+$('nextEmpty').onclick=()=>{const q=nextPendingQuestion(state.sheet,state.question);if(q!==null){state.question=q;save();renderQuestion();return}notify(isHeld(state.sheet)?'แผ่นนี้พักตรวจ':'ไม่มีข้อรอตรวจในแผ่นนี้')};
 $('reviewed').onchange=()=>{if(count(state.sheet)!==100)return;state.reviewed[state.sheet]=$('reviewed').checked;if(DATA.assistance)reviewWholeSheet(state.sheet,$('reviewed').checked);save();renderCounts()};
 $('nextDraftFlag').onclick=()=>{const questions=DATA.drafts?.sheets?.[state.sheet]?.review_questions||[];if(!questions.length)return;state.question=questions.find(q=>q>state.question)||questions[0];save();renderQuestion()};
 for(const role of ['A','B']){$('img'+role).onload=()=>layoutImage(role);$('img'+role).onerror=()=>notify('เปิดภาพ '+role+' ไม่สำเร็จ: '+current()[role].name);$('zoom'+role).oninput=()=>layoutImage(role);$('rotate'+role).onclick=()=>{angles[role]=(angles[role]+90)%360;layoutImage(role)}}
 window.addEventListener('resize',()=>{layoutImage('A');layoutImage('B');layoutPilotCrop()});
 document.addEventListener('keydown',e=>{
  if(DATA.assistance&&queueKeyTarget())return;
+ if(DATA.risk_review&&(riskKeyTarget()||document.activeElement?.closest?.('#riskReview')))return;
  if(document.activeElement?.closest?.('#reviewWorkflow'))return;
  if(e.ctrlKey||e.metaKey||e.altKey||['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName))return;
  const k=e.key.toLowerCase();const mark={'b':'blank','m':'multiple','u':'ambiguous'}[k]||(marks.has(k)?k:null);
@@ -241,16 +260,19 @@ async function importFile(file){
   for(const [k,v] of entries){if(state.answers[k]!==v)state.reviewed[k.split(':')[0]]=false;state.answers[k]=v;if(DATA.assistance){if(!backup){const [s,q]=k.split(':');recordHumanChoice(s,Number(q),v)}else if(backup.answerMeta?.[k])state.answerMeta[k]=backup.answerMeta[k]}}
   for(const [s,v] of Object.entries(reviewed)){if(v===true&&known.has(s)&&count(s)===100){state.reviewed[s]=true;if(DATA.assistance)reviewWholeSheet(s,true)}else if(DATA.assistance&&v===false&&known.has(s))state.reviewed[s]=false}
   if(DATA.assistance&&backup){state.queueEdits=backup.queueEdits||{};state.queueDeferred=backup.queueDeferred||{};state.queueUndo=backup.queueUndo||[];state.queuePageKeys=backup.queuePageKeys||[];state.queuePageDeferred=backup.queuePageDeferred||{};state.queueActiveKey=backup.queueActiveKey||'';state.queueActionSequence=backup.queueActionSequence||0;if(backup.queueFilter){state.queueFilter=backup.queueFilter;$('queueFilter').value=backup.queueFilter}}
-  save();renderCounts();renderQuestion();notify(backup&&DATA.assistance?'กู้คืนคำตอบและสถานะการตรวจจาก JSON แล้ว '+entries.length+' รายการ':'นำเข้าแล้ว '+entries.length+' คำตอบ ช่องว่างจากไฟล์ไม่ลบคำตอบเดิม');
+  if(backup)state.riskAudit=backup.riskAudit||{};
+  save();renderCounts();renderQuestion();if(DATA.risk_review)renderRiskReview();notify(backup&&DATA.assistance?'กู้คืนคำตอบและสถานะการตรวจจาก JSON แล้ว '+entries.length+' รายการ':'นำเข้าแล้ว '+entries.length+' คำตอบ ช่องว่างจากไฟล์ไม่ลบคำตอบเดิม');
  }catch(e){notify('นำเข้าไม่สำเร็จ: '+e.message)}
 }
 $('restore').onclick=()=>$('importFile').click();$('importFile').onchange=async e=>{if(e.target.files[0])await importFile(e.target.files[0]);e.target.value=''};
-window.addEventListener('storage',e=>{if(e.key===key&&e.newValue){try{const v=JSON.parse(e.newValue);validAnswers(v.answers);state.answers=v.answers;state.reviewed=v.reviewed||{};state.correctionsApplied=v.correctionsApplied||[];state.draftsSeen=v.draftsSeen||{};if(DATA.assistance){state.answerMeta=v.answerMeta||state.answerMeta;state.queueEdits=v.queueEdits||{};state.queueDeferred=v.queueDeferred||{}}renderCounts();renderQuestion();notify('อัปเดตคำตอบจากอีกแท็บแล้ว')}catch{notify('อ่านการเปลี่ยนแปลงจากอีกแท็บไม่สำเร็จ โปรดสำรอง CSV')}}});
+window.addEventListener('storage',e=>{if(e.key===key&&e.newValue){try{const v=JSON.parse(e.newValue);validAnswers(v.answers);state.answers=v.answers;state.reviewed=v.reviewed||{};state.correctionsApplied=v.correctionsApplied||[];state.draftsSeen=v.draftsSeen||{};state.riskAudit=v.riskAudit||{};if(DATA.assistance){state.answerMeta=v.answerMeta||state.answerMeta;state.queueEdits=v.queueEdits||{};state.queueDeferred=v.queueDeferred||{}}renderCounts();renderQuestion();if(DATA.risk_review)renderRiskReview();notify('อัปเดตคำตอบจากอีกแท็บแล้ว')}catch{notify('อ่านการเปลี่ยนแปลงจากอีกแท็บไม่สำเร็จ โปรดสำรอง CSV')}}});
 for(const batch of proposalBatches){const option=document.createElement('option');option.value=batch.id;option.textContent=batch.sheet_ids[0]+'–'+batch.sheet_ids[batch.sheet_ids.length-1]+' ('+batch.sheet_ids.length+' แผ่น)';$('proposalBatch').append(option)}
 const newestBatch=DATA.pilot?.active_batch||proposalBatches[0]?.id;
 if(newestBatch&&state.lastAnnouncedBatch!==newestBatch&&!DATA.assistance){state.lastAnnouncedBatch=newestBatch;state.proposalBatch=newestBatch;const batch=currentBatch();state.sheet=batch.sheet_ids.find(id=>count(id)<100)||batch.sheet_ids[0];state.question=1}
 /* __ANSWER_ASSISTANCE__ */
+/* __RISK_REVIEW__ */
 installAssistance();
+installRiskReview();
 showSheet();if(storageOkay)save();
 </script>
 </body>

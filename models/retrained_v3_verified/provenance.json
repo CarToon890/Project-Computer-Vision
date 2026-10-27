@@ -1,0 +1,7 @@
+{
+  "selection_sha256": "4d8b28815b06c77b453fc42e2925a383c97d467ed9a8b7d572e3454d3b76fa31",
+  "runtime_validation_sha256": "3896524b0665350315a8b0b999fcf64f3129827ab3b0c84671b5884cdbb9bad6",
+  "base_model_sha256": "aa8a4c260b9ebc86ba6ce8159ee95e6891a9ca7a29cc7198e3afc79662da1a82",
+  "training_data_sha256": "916fd70fd30565b5417f5bf8c6200e271d19712dbab5f41c18e54fdf1dedf558",
+  "test_used_for_selection": false
+}

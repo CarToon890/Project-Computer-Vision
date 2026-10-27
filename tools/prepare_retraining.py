@@ -29,7 +29,7 @@ def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def select_labels(inventory, labels, splits, test_sheets, holds):
+def select_labels(inventory, labels, splits, test_sheets, holds, *, include_all_confirmed_test=False):
     pairs = defaultdict(list)
     for row in inventory:
         if row['pair_status'] == 'verified':
@@ -62,7 +62,7 @@ def select_labels(inventory, labels, splits, test_sheets, holds):
         if answer not in CLASSES:
             raise ValueError(f'Invalid confirmed mark: {key} {answer}')
         split = split_map[sid]
-        if split == 'test' and sid not in test_sheets:
+        if split == 'test' and sid not in test_sheets and not include_all_confirmed_test:
             continue
         selected.append({'sheet_id': sid, 'question_no': q, 'ground_truth': answer, 'split': split})
     for sid in test_sheets:
@@ -76,6 +76,7 @@ def select_labels(inventory, labels, splits, test_sheets, holds):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, default=ROOT / 'presentation_build/retraining_v2')
+    parser.add_argument('--all-confirmed-test',action='store_true',help='Include all confirmed Test questions, preserving the fully labeled frozen cohort.')
     parser.add_argument('--compatible-cache-geometry',action='append',default=[],
         help='Explicit predecessor SHA256, only after verifying that changes add recovery paths without changing successful outputs.')
     args = parser.parse_args()
@@ -91,7 +92,7 @@ def main():
     test_sheets = {r['sheet_id'] for r in read_csv(pilot_split) if r['split'] == 'test'}
     selected, pairs = select_labels(read_csv(meta / 'image_inventory_verified.csv'),
         read_csv(meta / 'answer_labels.csv'), read_csv(meta / 'sheet_splits.csv'),
-        test_sheets, read_csv(meta / 'pairing_review_holds.csv'))
+        test_sheets, read_csv(meta / 'pairing_review_holds.csv'),include_all_confirmed_test=args.all_confirmed_test)
     wanted = defaultdict(list)
     for label in selected:
         wanted[label['sheet_id']].append(label)
@@ -172,6 +173,7 @@ def main():
         'sheets_by_split':{s:len({r['sheet_id'] for r in selected if r['split']==s}) for s in ('train','validation','test')},
         'classes_by_split':{s:dict(Counter(r['ground_truth'] for r in selected if r['split']==s)) for s in ('train','validation','test')},
         'frozen_test_sheets':sorted(test_sheets), 'test_used_for_model_selection':False,
+        'include_all_confirmed_test':args.all_confirmed_test,
         'omr_or_cnn_drafts_used_as_targets':0, 'independent_evaluation':False,
         'annotation_mode':'human_inspected_omr_assisted', 'source_sha256':before,
         'geometry_sha256':geometry_hash,'source_images':len(images), 'all_source_images_registered':True,

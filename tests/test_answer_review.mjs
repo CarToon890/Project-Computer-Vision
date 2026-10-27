@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 const template=fs.readFileSync(new URL('../tools/answer_review_template.html',import.meta.url),'utf8');
-const script=template.match(/<script>\s*([\s\S]*?)<\/script>/)[1].replace('/* __ANSWER_ASSISTANCE__ */',fs.readFileSync(new URL('../tools/answer_assistance.js',import.meta.url),'utf8'));
+const script=template.match(/<script>\s*([\s\S]*?)<\/script>/)[1].replace('/* __ANSWER_ASSISTANCE__ */',fs.readFileSync(new URL('../tools/answer_assistance.js',import.meta.url),'utf8')).replace('/* __RISK_REVIEW__ */',fs.readFileSync(new URL('../tools/risk_review.js',import.meta.url),'utf8'));
 const fixture={fingerprint:'test-fixture',initial:{'S0001:1':'3'},sheets:['S0001','S0002'].map(id=>({id,contributor:'Fixture',A:{name:'a.jpg',url:'a.jpg'},B:{name:'b.jpg',url:'b.jpg'}}))};
 fixture.pilot={method:'fixture-reader',run_id:'fixture-run',sheets:{S0001:{A:{rows:[]},B:{rows:Array.from({length:100},(_,i)=>({question_no:i+1,proposed:'2',uncertain:false})),sprite:'fixture.jpg',overlay:'fixture-overlay.jpg'}}}};
 
@@ -134,6 +134,58 @@ assert.equal(app.run('value("S0002",1)'),'2','An explicit acceptance may fill a 
 app.run('exportPilot()');
 assert.match(await app.downloaded().text(),/"omr_assisted","reviewed_label_agreement","false"/);
 fixture.assistance={version:'workload-v1',start:'S0002',items:Object.fromEntries([1,2,3,4,5,6].map(q=>['S0002:'+q,{proposed:q===4?'blank':'2',role:'B',confident:q!==4,reasons:q===4?['special_mark']:[],risk_score:q===4?900:0}])),queue:[1,2,3,4,5].map(q=>({key:'S0002:'+q,kind:q===5?'sample':'risk'}))};
+{
+ const testData=JSON.parse(JSON.stringify(fixture));
+ testData.risk_review={version:'test',run_id:'run-1',sample_size:1,sample_method:'test',items:{
+  'S0002:1':{group:'risk',proposal:'3',reasons:['methods_disagree'],split:'train'},
+  'S0002:2':{group:'agreement',proposal:'2',reasons:[],audit_sample:true,split:'train'},
+  'S0002:3':{group:'agreement',proposal:'2',reasons:[],split:'train'}}};
+ const risk=boot(new Map(),testData);
+ assert.equal(risk.run('humanVerified("S0002",1)'),false,'Showing the risk queue never confirms a draft');
+ assert.equal(risk.run('value("S0002",1)'),'2','Existing tentative answer must not be overwritten');
+ risk.get('riskReviewExportDrafts').click();
+ const pseudoCsv=await risk.downloaded().text();
+ assert.doesNotMatch(pseudoCsv.split('\r\n')[0],/ground_truth/,'Machine answers must never look like verified labels');
+ assert.match(pseudoCsv,/"S0002","3","2","machine_generated_not_verified","false","train"/);
+ assert.doesNotMatch(pseudoCsv,/"S0002","2","2","machine_generated_not_verified"/,'Frozen random audit must not enter pseudo-labels');
+ const first=risk.get('riskReviewCards').children[0];
+ assert.match(first.children[1].textContent,/CNN และ CLA อ่านต่างกัน/);
+ const buttons=first.children.find(e=>e.className==='queue-answer-buttons');
+ const suggested=buttons.children.find(e=>e.dataset.riskMark==='3');
+ assert.match(suggested.className,/risk-suggested/,'The CNN proposal is visually highlighted');
+ assert.match(suggested.textContent,/CNN เสนอ/,'The proposal is identified without relying on color');
+ risk.get('focusRiskReview').click();
+ risk.handlers.keydown({key:'Enter',preventDefault(){}});
+ assert.equal(risk.run('humanVerified("S0002",1)'),true,'Enter confirms the active CNN proposal');
+ assert.equal(risk.run('value("S0002",1)'),'3','Enter uses the CNN proposal, not the different older draft');
+ risk.get('riskReviewFilter').value='sample';risk.get('riskReviewFilter').onchange();
+ const sampleCard=risk.get('riskReviewCards').children[0];
+ assert.ok(!sampleCard.children.some(e=>String(e.textContent).includes('CNN เสนอ')),'Random audit hides the suggestion');
+ assert.ok(!sampleCard.children.find(e=>e.className==='queue-answer-buttons').children.some(e=>e.className.includes('risk-suggested')),'Random audit never reveals the model answer through highlighting');
+ risk.handlers.keydown({key:'Enter',preventDefault(){}});
+ assert.equal(risk.run('humanVerified("S0002",2)'),false,'Enter must never silently accept a blind audit suggestion');
+ risk.handlers.keydown({key:'2',preventDefault(){}});
+ assert.equal(risk.run('validRiskAudits().length'),1);
+ risk.get('backup').click();const saved=await risk.downloaded().text();
+ const restoredRisk=boot(new Map(),testData);
+ await restoredRisk.run('importFile({name:"backup.json",text:async()=>'+JSON.stringify(saved)+'})');
+ assert.equal(restoredRisk.run('validRiskAudits().length'),1,'Backup restore keeps audited sample and provenance');
+ restoredRisk.run('changeSheet("S0002");state.question=2;choose("4")');
+ assert.equal(restoredRisk.run('validRiskAudits().length'),0,'Changed sample answers must not leave stale comparison results');
+ const emptyData=JSON.parse(JSON.stringify(testData));emptyData.risk_review.items['S0002:1'].proposal='';
+ const noSuggestion=boot(new Map(),emptyData);noSuggestion.get('focusRiskReview').click();
+ noSuggestion.handlers.keydown({key:'Enter',preventDefault(){}});
+ assert.equal(noSuggestion.run('humanVerified("S0002",1)'),false,'Enter cannot invent a missing model proposal');
+ const multiData=JSON.parse(JSON.stringify(testData));multiData.risk_review.items['S0002:4']={group:'risk',proposal:'5',reasons:[],split:'train'};
+ const keyboard=boot(new Map(),multiData);keyboard.get('focusRiskReview').click();
+ keyboard.handlers.keydown({key:'ArrowRight',preventDefault(){}});
+ assert.equal(keyboard.run('riskActiveKey'),'S0002:4','Arrow keys select the next risk card');
+ keyboard.handlers.keydown({key:'Enter',repeat:true,preventDefault(){throw Error('Repeated keys should be ignored')}});
+ assert.equal(keyboard.run('humanVerified("S0002",4)'),false,'Holding Enter must not confirm extra rows');
+ keyboard.handlers.keydown({key:'1',preventDefault(){}});
+ assert.equal(keyboard.run('value("S0002",4)'),'1','Number keys correct the active card');
+ assert.equal(keyboard.run('humanVerified("S0002",1)'),false,'Keyboard actions must not confirm a different card');
+}
 fixture.pilot.sheets.S0002.B.rows[3].proposed='blank';fixture.pilot.sheets.S0002.B.rows[3].uncertain=true;
 const legacyCache=new Map([['omr-answer-review-v1-'+fixture.fingerprint,JSON.stringify({answers:{'S0001:2':'4','S0002:2':'5','S0002:3':''},reviewed:{},sheet:'S0001',question:2})]]);
 app=boot(legacyCache);
@@ -144,6 +196,17 @@ assert.equal(app.run('value("S0002",4)'),'','Low-confidence proposals must remai
 assert.equal(app.run('value("S0002",1)'),'2');
 assert.equal(app.run('humanVerified("S0002",1)'),false,'Automatic drafts must never become human verified');
 assert.equal(app.run('state.sheet'),'S0002','The assisted workflow starts after the user-protected range');
+const navigation=boot(new Map());
+navigation.run('changeSheet("S0002");state.question=1');
+navigation.get('nextEmpty').click();
+assert.equal(navigation.run('state.question'),2,'Next unreviewed finds a filled but unverified draft');
+navigation.run('choose("3")');
+assert.equal(navigation.run('humanVerified("S0002",2)'),true);
+assert.equal(navigation.run('state.question'),3,'Confirming advances to the next unverified question');
+assert.match(navigation.get('sheetCount').textContent,/มีคำตอบ .*รวมร่าง/);
+assert.match(navigation.get('sheetCount').textContent,/คนตรวจแล้ว 1 ข้อ/);
+navigation.run('state.question=1');navigation.get('nextEmpty').click();
+assert.equal(navigation.run('state.question'),3,'Navigation skips previously inspected questions');
 app.run('exportCsv()');
 assert.equal((await app.downloaded().text()).split('\r\n')[101],'"S0002","1",""');
 app.run('exportMachineDrafts()');const machineCsv=await app.downloaded().text();
@@ -188,6 +251,11 @@ assert.equal(app.run('humanVerified("S0002",6)'),true,'Authoritative imported hu
 
 // Keyboard actions must target the queue, never the separate whole-sheet form.
 app=boot(new Map());
+assert.equal(app.run('queueKeyTarget()'),false,'Hidden queue must not capture keyboard actions');
+app.handlers.keydown({key:'Enter',ctrlKey:true,preventDefault(){throw Error('Hidden queue must not consume Ctrl+Enter')}});
+assert.equal(app.run('humanVerified("S0002",1)'),false,'Hidden queue must not confirm drafts');
+app.get('legacyQueue').open=true;
+app.get('focusQueue').click();
 app.handlers.keydown({key:'4',preventDefault(){}});
 assert.equal(app.run('value("S0002",1)'),'4');assert.equal(app.run('humanVerified("S0002",1)'),true);
 assert.equal(app.run('value("S0002",2)'),'2','One keypress must confirm only one card');
@@ -200,6 +268,9 @@ assert.equal(app.run('DATA.assistance.queue.every(e=>{const [s,q]=e.key.split(":
 assert.equal(app.run('humanVerified("S0002",6)'),false);
 app.handlers.keydown({key:'z',ctrlKey:true,preventDefault(){}});
 assert.equal(app.run('humanVerified("S0002",1)'),false,'A group undo must restore the complete transaction');
+app.get('legacyQueue').open=false;
+app.handlers.keydown({key:'Enter',ctrlKey:true,preventDefault(){throw Error('Closed queue must not consume Ctrl+Enter')}});
+assert.equal(app.run('humanVerified("S0002",1)'),false,'Closing queue must disable its keyboard shortcuts');
 app.run('quickReviewAnswer("S0002:1","3");changeSheet("S0002");state.question=1;choose("5");undoQueueReview()');
 assert.equal(app.run('value("S0002",1)'),'5','Undo must preserve subsequent manual edits made outside the queue');
 const heldBrowser=app.storage;fixture.pairing_holds={S0002:'Different source papers; pairing audit pending'};
@@ -312,6 +383,10 @@ if(fs.existsSync(generated)){
     if(backupMigration)assert.equal(backupStorage.get(savedKey),originalJson,'Original backup cache keeps every withdrawn answer');
     for(const k of Object.keys(real.draft_supplement?.items||{})){
      if(Object.hasOwn(backup.answers,k))continue;
+     if(Object.hasOwn(real.initial,k)){
+      assert.equal(restored.run('humanVerified('+JSON.stringify(k.split(':')[0])+','+Number(k.split(':')[1])+')'),true,'Newly imported official answers remain verified');
+      continue;
+     }
      assert.equal(restored.run('state.answerMeta['+JSON.stringify(k)+'].verified'),false,'New paired drafts must remain unverified');
     }
     assert.equal(restored.run('DATA.assistance.queue.length'),real.assistance.queue.length);

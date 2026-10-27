@@ -183,10 +183,22 @@ def main() -> None:
         repair_url = "../../presentation_build/nat_pairing_audit/" + ('pair_review.html' if nat_review.exists() else 'nat_source_audit.csv')
     else:
         repair_url = "../../presentation_build/jilayu_repair/pair_review.html"
-    data = json.dumps({"sheets": sheets, "initial": initial, "fingerprint": fingerprint, "pilot": pilot, "corrections": confirmed_updates, "drafts": drafts, "pairing_holds": holds, "pairing_migrations": migrations, "annotation_mode": "omr_assisted", "assistance": assistance, "draft_supplement": supplement, "repair_url": repair_url, "repair_sheet": repair_sheet}, ensure_ascii=False).replace("</", "<\\/")
+    risk_file = ROOT / 'presentation_build/risk_review_20261027_v3/risk_review.json'
+    risk_review = json.loads(risk_file.read_text(encoding='utf-8')) if risk_file.exists() else None
+    if risk_review:
+        for relative in ('data/metadata/image_inventory_verified.csv', 'data/metadata/sheet_splits.csv',
+                         'presentation_build/system_test_270_perspective_fixed/cnn_all_270_predictions.csv',
+                         'presentation_build/system_test_270_perspective_fixed/cla_all_270_predictions.csv'):
+            expected = risk_review['source_sha256'].get(str(Path(relative)))
+            if not expected or hashlib.sha256((ROOT/relative).read_bytes()).hexdigest() != expected:
+                raise ValueError(f'Risk queue source changed: {relative}')
+        if any(k.split(':')[0] not in known for k in risk_review['items']):
+            raise ValueError('Risk queue contains an unknown sheet')
+    data = json.dumps({"sheets": sheets, "initial": initial, "fingerprint": fingerprint, "pilot": pilot, "corrections": confirmed_updates, "drafts": drafts, "pairing_holds": holds, "pairing_migrations": migrations, "annotation_mode": "omr_assisted", "assistance": assistance, "draft_supplement": supplement, "risk_review": risk_review, "repair_url": repair_url, "repair_sheet": repair_sheet}, ensure_ascii=False).replace("</", "<\\/")
     template = (ROOT / "tools/answer_review_template.html").read_text(encoding="utf-8")
     workflow = (ROOT / 'tools/answer_assistance.js').read_text(encoding='utf-8')
-    OUTPUT.write_text(template.replace("__ANNOTATION_DATA__", data).replace('/* __ANSWER_ASSISTANCE__ */', workflow), encoding="utf-8")
+    risk_workflow = (ROOT / 'tools/risk_review.js').read_text(encoding='utf-8')
+    OUTPUT.write_text(template.replace("__ANNOTATION_DATA__", data).replace('/* __ANSWER_ASSISTANCE__ */', workflow).replace('/* __RISK_REVIEW__ */', risk_workflow), encoding="utf-8")
     print(f"Created {OUTPUT} for {len(sheets)} sheets / {len(sheets) * 100} questions")
 
 

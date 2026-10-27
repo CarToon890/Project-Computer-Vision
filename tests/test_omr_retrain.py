@@ -55,6 +55,18 @@ class RetrainingTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             select_labels(inventory,labels+[labels[0]],splits,{'S0003'},[])
 
+    def test_all_confirmed_test_keeps_partial_additional_test_sheet(self):
+        inventory=[{'sheet_id':s,'capture_role':role,'pair_status':'verified'} for s in ('S0001','S0002','S0003','S0004') for role in 'AB']
+        labels=[{'sheet_id':'S0001','question_no':'1','ground_truth':'2'},
+                {'sheet_id':'S0002','question_no':'1','ground_truth':'4'},
+                {'sheet_id':'S0004','question_no':'7','ground_truth':'blank'}]
+        labels += [{'sheet_id':'S0003','question_no':str(q),'ground_truth':'3'} for q in range(1,101)]
+        splits=[{'sheet_id':s,'split':v} for s,v in [('S0001','train'),('S0002','validation'),('S0003','test'),('S0004','test')]]
+        old,_=select_labels(inventory,labels,splits,{'S0003'},[])
+        expanded,_=select_labels(inventory,labels,splits,{'S0003'},[],include_all_confirmed_test=True)
+        self.assertEqual(len(expanded),len(old)+1)
+        self.assertTrue(any(r['sheet_id']=='S0004' and r['ground_truth']=='blank' for r in expanded))
+
     def test_data_rejects_leakage_missing_pair_and_draft_targets(self):
         data,report=dataset();run.validate_rows(data,report)
         broken=copy.deepcopy(data);broken['sheet_id'][4]='S0001'
@@ -66,6 +78,17 @@ class RetrainingTests(unittest.TestCase):
         bad_report=copy.deepcopy(report);bad_report['omr_or_cnn_drafts_used_as_targets']=1
         with self.assertRaisesRegex(ValueError,'draft'):
             run.validate_rows(data,bad_report)
+
+    def test_additional_test_sheets_require_explicit_preflight_flag(self):
+        data,report=dataset()
+        extra={k:v[-2:].copy() for k,v in data.items()}
+        extra['sheet_id'][:]='S0004'
+        data={k:np.concatenate((v,extra[k])) for k,v in data.items()}
+        report['crop_rows_by_split']['test']+=2
+        with self.assertRaisesRegex(ValueError,'cohort'):
+            run.validate_rows(data,report)
+        report['include_all_confirmed_test']=True
+        run.validate_rows(data,report)
 
     def test_confidence_and_workflow_defer_instead_of_inventing_answers(self):
         probs=np.zeros((3,8),dtype=np.float32)

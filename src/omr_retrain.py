@@ -46,7 +46,8 @@ def validate_rows(data, report):
     if any(set(g) != {'A','B'} or g['A'] != g['B'] for g in groups.values()):
         raise ValueError('Missing paired crop or unequal A/B target.')
     expected_test = set(report['frozen_test_sheets'])
-    if {s for s,v in sheet_splits.items() if v=='test'} != expected_test:
+    actual_test={s for s,v in sheet_splits.items() if v=='test'}
+    if (not report.get('include_all_confirmed_test') and actual_test != expected_test) or (report.get('include_all_confirmed_test') and not expected_test <= actual_test):
         raise ValueError('Frozen Test cohort changed.')
     for sid in expected_test:
         if {q for s,q in groups if s==sid} != set(range(1,101)):

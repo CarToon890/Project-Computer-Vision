@@ -24,7 +24,9 @@ additional image collection. The earlier 295-pair target is historical.
 All 594 originals are kept:
 540 primary images, 47 duplicate copies, six single images awaiting counterparts,
 and one additional capture. Ground truth for all 270 sheets would require 27,000 observed
-answers; the current official review contains 4,760 answers.
+answers; the official review contains 7,153 answers as of 28 October 2026.
+The newest 392 reviewed answers add 331 Train, 33 Validation and 28 Test
+questions; existing model results still refer to the earlier data and weights.
 
 The first development run uses the 38 sheets already reviewed in full (3,800
 labels), retaining the other 960 inspected labels in the canonical table. Run
@@ -72,3 +74,7 @@ See [PERSPECTIVE_FIX.md](PERSPECTIVE_FIX.md) and the latest section of
 
 For the risk-first review policy, validation experiments, read-only dataset audit,
 and real HTTP smoke test, see [OMR_IMPROVEMENT_RESULTS.md](OMR_IMPROVEMENT_RESULTS.md).
+
+The local web app now prefers the confirmed-label v3 profile when present; v2
+remains available. See [V3_TRAINING_RESULTS.md](V3_TRAINING_RESULTS.md) for
+validation-first selection, the development Test comparison and limitations.
