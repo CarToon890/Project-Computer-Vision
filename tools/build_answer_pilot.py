@@ -96,19 +96,88 @@ def complete_marker_rail(points):
     return np.insert(points,index,[x,y],axis=0)
 
 
+def prune_rail_outliers(points: np.ndarray) -> np.ndarray:
+    """Sanitize marker rail by removing stray false marks and recovering missing dashes.
+    
+    Handles:
+    - Normal 25 dashes
+    - 24 dashes with a missing dash within block or at block boundary (does not truncate)
+    - 25 points where 1 real dash is missing and 1 stray outlier exists at head/tail (e.g. S0107)
+    - 26 points with 25 real dashes + 1 stray outlier
+    """
+    if points is None or len(points) < 24:
+        return points
+
+    pattern = np.arange(25) + .8 * (np.arange(25) // 5)
+
+    def fit_error(pts, pat):
+        if len(pts) != len(pat):
+            return 999.0
+        fit = np.polyfit(pat, pts[:, 1], 2)
+        return float(np.sqrt(np.mean((np.polyval(fit, pat) - pts[:, 1]) ** 2)))
+
+    # If exactly 24 points, keep all points intact for complete_marker_rail to resolve
+    if len(points) == 24:
+        return points
+
+    # If exactly 25 points
+    if len(points) == 25:
+        err_all = fit_error(points, pattern)
+        if err_all <= 2.5:
+            return points
+        # High error: check if dropping tail recovers clean 25 points (e.g. S0107)
+        rec_drop_tail = complete_marker_rail(points[:-1])
+        if len(rec_drop_tail) == 25 and fit_error(rec_drop_tail, pattern) <= 2.5:
+            return rec_drop_tail
+        # Check if dropping head recovers clean 25 points
+        rec_drop_head = complete_marker_rail(points[1:])
+        if len(rec_drop_head) == 25 and fit_error(rec_drop_head, pattern) <= 2.5:
+            return rec_drop_head
+        return points
+
+    # If exactly 26 points (25 real + 1 stray at tail or head)
+    if len(points) == 26:
+        if fit_error(points[:-1], pattern) <= 2.5:
+            return points[:-1]
+        if fit_error(points[1:], pattern) <= 2.5:
+            return points[1:]
+        rec_both = complete_marker_rail(points[1:-1])
+        if len(rec_both) == 25 and fit_error(rec_both, pattern) <= 2.5:
+            return rec_both
+        return points
+
+    # If > 26 points, strip points that lie far outside the expected span
+    if len(points) > 26:
+        diffs = np.diff(points[:, 1])
+        med_step = float(np.median(diffs))
+        if med_step > 0:
+            while len(points) > 25 and (points[-1, 1] - points[-2, 1]) > 2.2 * med_step * 1.8:
+                points = points[:-1]
+            while len(points) > 25 and (points[1, 1] - points[0, 1]) > 2.2 * med_step * 1.8:
+                points = points[1:]
+        if len(points) == 25 and fit_error(points, pattern) <= 2.5:
+            return points
+        if len(points) == 24:
+            return points
+
+    return points
+
+
 def locate_grid(gray: np.ndarray, relaxed=False):
     for threshold in (80, 105, 130, 155):
         parts = components(gray, threshold)
         dashes = [(cx, cy) for cx, cy, x, y, w, h, area in parts
                   if HEIGHT * (.16 if relaxed else .22) < cy < HEIGHT * (.95 if relaxed else .90) and 12 <= w <= 35
                   and 3 <= h <= 12 and w / h > 1.8 and area > 40]
-        left = cluster_points([p for p in dashes if p[0] < WIDTH * (.38 if relaxed else .22)], 1, 12)
+        left = prune_rail_outliers(cluster_points([p for p in dashes if p[0] < WIDTH * (.38 if relaxed else .22)], 1, 12))
         if len(left) != 25:
             # Perspective may move the top of the left marker rail inward.
-            left = cluster_points([p for p in dashes if p[0] < WIDTH * (.43 if relaxed else .27)], 1, 12)
-        right = cluster_points([p for p in dashes if p[0] > WIDTH * (.72 if relaxed else .85)], 1, 12)
-        if relaxed:
-            left,right=complete_marker_rail(left),complete_marker_rail(right)
+            left = prune_rail_outliers(cluster_points([p for p in dashes if p[0] < WIDTH * (.43 if relaxed else .27)], 1, 12))
+        right = prune_rail_outliers(cluster_points([p for p in dashes if p[0] > WIDTH * (.72 if relaxed else .85)], 1, 12))
+        if len(left) == 24:
+            left = complete_marker_rail(left)
+        if len(right) == 24:
+            right = complete_marker_rail(right)
         if len(left) != 25 or len(right) != 25:
             continue
         first_y = float((left[0, 1] + right[0, 1]) / 2)

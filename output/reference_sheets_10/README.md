@@ -1,0 +1,18 @@
+# ชุดภาพและคำตอบอ้างอิง 10 ใบ
+
+คำตอบเหล่านี้คือรอยฝนบนกระดาษแต่ละใบที่ตรวจบันทึกไว้ ไม่ใช่เฉลยข้อสอบจริง ใช้เปรียบเทียบผลอ่าน OMR ได้ หรือใช้เป็นเฉลยจำลองเพื่อทดสอบการคิดคะแนนเท่านั้น
+
+ภาพ A และ B เป็นภาพของกระดาษใบเดียวกัน ข้อมูลชุดนี้เคยอยู่ในกระบวนการพัฒนา จึงไม่ใช่การทดสอบอิสระ
+
+| ใบ | ชุดข้อมูล | ภาพ A | ภาพ B | คำตอบอ้างอิง |
+|---|---|---|---|---|
+| S0009 | test | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160207%20%E0%B8%9A%E0%B8%AD%E0%B8%AA/A/IMG_6387.JPG) | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160207%20%E0%B8%9A%E0%B8%AD%E0%B8%AA/B/IMG_6439.JPG) | [S0009.csv](S0009.csv) |
+| S0011 | test | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160207%20%E0%B8%9A%E0%B8%AD%E0%B8%AA/A/IMG_6389.JPG) | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160207%20%E0%B8%9A%E0%B8%AD%E0%B8%AA/B/IMG_6437.JPG) | [S0011.csv](S0011.csv) |
+| S0012 | test | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160207%20%E0%B8%9A%E0%B8%AD%E0%B8%AA/A/IMG_6390.JPG) | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160207%20%E0%B8%9A%E0%B8%AD%E0%B8%AA/B/IMG_6436.JPG) | [S0012.csv](S0012.csv) |
+| S0014 | test | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160207%20%E0%B8%9A%E0%B8%AD%E0%B8%AA/A/IMG_6392.JPG) | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160207%20%E0%B8%9A%E0%B8%AD%E0%B8%AA/B/IMG_6434.JPG) | [S0014.csv](S0014.csv) |
+| S0016 | test | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160207%20%E0%B8%9A%E0%B8%AD%E0%B8%AA/A/IMG_6394.JPG) | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160207%20%E0%B8%9A%E0%B8%AD%E0%B8%AA/B/IMG_6432.JPG) | [S0016.csv](S0016.csv) |
+| S0020 | test | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160207%20%E0%B8%9A%E0%B8%AD%E0%B8%AA/A/IMG_6398.JPG) | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160207%20%E0%B8%9A%E0%B8%AD%E0%B8%AA/B/IMG_6428.JPG) | [S0020.csv](S0020.csv) |
+| S0026 | test | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160207%20%E0%B8%9A%E0%B8%AD%E0%B8%AA/A/IMG_6404.JPG) | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160207%20%E0%B8%9A%E0%B8%AD%E0%B8%AA/B/IMG_6420.JPG) | [S0026.csv](S0026.csv) |
+| S0035 | test | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160209%20jilayu/Set%20A/IMG_8831.JPG) | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160209%20jilayu/Set%20B/IMG_8830.JPG) | [S0035.csv](S0035.csv) |
+| S0037 | test | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160209%20jilayu/Set%20A/IMG_8833.JPG) | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160209%20jilayu/Set%20B/IMG_8828.JPG) | [S0037.csv](S0037.csv) |
+| S0001 | train | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160207%20%E0%B8%9A%E0%B8%AD%E0%B8%AA/A/IMG_6379.JPG) | [เปิดภาพ](file:///C:/Users/USER/Desktop/BUU69/Project-Computer-Vision/Dataset-Computer-vision/67160207%20%E0%B8%9A%E0%B8%AD%E0%B8%AA/B/IMG_6448.JPG) | [S0001.csv](S0001.csv) |
