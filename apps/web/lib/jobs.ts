@@ -2,7 +2,7 @@ import { randomBytes, createHmac } from 'node:crypto';
 import { head, get, del } from '@vercel/blob';
 import { getVercelOidcToken } from '@vercel/oidc';
 import { pool, transaction, AppError, requireId } from './db';
-import { ANSWERS, score } from './scoring.mjs';
+import { ANSWERS, score, riskScore } from './scoring.mjs';
 export const id = () => randomBytes(16).toString('hex');
 export async function job(jobId: string) {
   requireId(jobId);
@@ -15,7 +15,7 @@ export async function job(jobId: string) {
       row.status = 'interrupted';
     }
   }
-  return {...row, scores:score(row.result, row.reviews, row.grading?.key || [])};
+  return {...row, scores:score(row.result, row.reviews, row.grading?.key || []), riskScores:row.grading?.policy === 'risk-reviewed-v1' ? riskScore(row.result, row.reviews, row.grading) : null};
 }
 export async function reserveUpload(jobId: string, data: {role:string;size:number;type:string;ext:string}) {
   requireId(jobId);

@@ -7,6 +7,17 @@ const LOCAL_COOKIE = 'omr-session-local';
 const secure = process.env.NODE_ENV === 'production';
 const cookieName = () => secure ? COOKIE : LOCAL_COOKIE;
 const digest = (value: string) => createHash('sha256').update(value).digest('hex');
+export function temporaryPreviewAccess() {
+  return process.env.VERCEL_ENV === 'preview' && process.env.OMR_TEMP_PREVIEW_ACCESS === '1';
+}
+export function isDemo() { return process.env.OMR_DEMO_MODE === '1'; }
+export async function demoOwner(create=false) {
+  const jar=await cookies(),name='__Host-omr-demo';
+  let token=jar.get(name)?.value;
+  if (!token && create) {token=randomBytes(32).toString('hex');jar.set(name,token,{secure:true,httpOnly:true,sameSite:'strict',path:'/',maxAge:31536000});}
+  if(!token || !/^[a-f0-9]{64}$/.test(token)) throw new AppError(401,'กรุณาเปิดหน้าเว็บใหม่');
+  return digest(token);
+}
 export function sameOrigin(request: Request) {
   // Next's internal dev URL can be localhost even when the browser uses
   // 127.0.0.1. Host is the browser-facing authority; browsers cannot forge it.
@@ -18,6 +29,8 @@ export function sameOrigin(request: Request) {
   if (!valid) throw new AppError(403, 'กรุณาเปิดเว็บใหม่แล้วลองอีกครั้ง');
 }
 export async function owner() {
+  if (isDemo()) return;
+  if (temporaryPreviewAccess()) return;
   if (!process.env.OMR_OWNER_PASSWORD_HASH) throw new AppError(503, 'เจ้าของเว็บต้องตั้งรหัสผ่านส่วนตัวก่อนใช้งาน');
   const token = (await cookies()).get(cookieName())?.value;
   if (!token || !/^[a-f0-9]{64}$/.test(token)) throw new AppError(401, 'กรุณาเข้าสู่ระบบอีกครั้ง');
