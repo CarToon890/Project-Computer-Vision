@@ -1,3 +1,5 @@
+-- Older private deployments predate the demo ownership column.
+ALTER TABLE omr_jobs ADD COLUMN IF NOT EXISTS demo_owner_hash text;
 CREATE TABLE IF NOT EXISTS omr_exam_sessions (
   id text PRIMARY KEY CHECK (id ~ '^[a-f0-9]{32}$'),
   name text NOT NULL,
