@@ -1,7 +1,6 @@
 // Run in a private local terminal. Never supply a password as a command argument.
-import {appendFileSync,existsSync,readFileSync} from 'node:fs';
+import {writeFileSync,existsSync,readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
-import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {hashPassword} from '../apps/web/lib/password.mjs';
 const root=resolve(fileURLToPath(new URL('..',import.meta.url)));
@@ -28,18 +27,7 @@ const first=await hidden('Set your private password (12–256 characters, input 
 const second=await hidden('Confirm password (input hidden): ');
 if(first!==second)throw Error('Passwords do not match. Nothing saved.');
 const hash=hashPassword(first);
-const result=spawnSync(process.execPath,[cli,'env','add','OMR_OWNER_PASSWORD_HASH','preview','--force','--scope','team_zYK3JQ8mj7CZKXONoTxcbMJH'],{cwd:resolve(root,'apps/web'),input:hash,encoding:'utf8'});
-if(result.status!==0){
-  const diagnostic=(result.stderr||'')+' '+(result.stdout||'')+' '+(result.error?.message||'');
-  let reason='ไม่ทราบสาเหตุแน่ชัด';
-  if(/not logged in|not authenticated|unauthorized|invalid token|login/i.test(diagnostic)) reason='การเข้าสู่ระบบ Vercel ไม่พร้อม';
-  else if(/eacces|eperm|access denied|permission denied|operation not permitted/i.test(diagnostic)) reason='คำสั่งถูกจำกัดสิทธิ์หรือการเชื่อมต่อ';
-  else if(/enotfound|econn|network|fetch failed|fetch failed|timed?\s*out|timeout|certificate/i.test(diagnostic)) reason='เชื่อมต่อ Vercel ไม่สำเร็จ';
-  else if(/forbidden|403|not authorized/i.test(diagnostic)) reason='บัญชีไม่มีสิทธิ์แก้ environment variable ของโปรเจกต์';
-  console.error(`บันทึกไม่สำเร็จ: ${reason} (รหัส ${result.status ?? 'ไม่มี'})`);
-  console.error('ไม่มีการแสดงรหัสผ่านหรือ hash กรุณาส่งเฉพาะข้อความนี้ให้ Codex ตรวจต่อ');
-  process.exit(1);
-}
-// Next's dotenv-expand would otherwise interpret the scrypt $ delimiters.
-appendFileSync(resolve(root,'apps/web/.env.local'),`\nOMR_OWNER_PASSWORD_HASH="${hash.replaceAll('$','\\$')}"\n`);
-console.log('Password hash saved to Preview and ignored local environment. Redeploy Preview to activate it. Existing sessions are revoked by the new hash.');
+// Local handoff only: no network required in the user's terminal. The ignored
+// file contains a one-way hash, not the password. Codex installs it to Preview.
+writeFileSync(resolve(root,'apps/web/.env.owner-password-hash'),hash,{encoding:'utf8',mode:0o600});
+console.log('เตรียมรหัสเรียบร้อยแล้ว บอก Codex ว่า “ตั้งแล้ว” เพื่อเชื่อมกับเว็บ');
