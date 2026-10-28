@@ -23,7 +23,8 @@ class ModelTests(unittest.TestCase):
     def test_fallback_and_draft_status(self):
         cases = [
             (reading('2', .99), None, '2', False, False),
-            (reading('2', .80), reading('4', .99), '4', True, False),
+            # A confident B still requires review when it disagrees with A.
+            (reading('2', .80), reading('4', .99), '4', True, True),
             (reading('2', .80), reading('4', .90), 'ambiguous', True, True),
             (None, reading('3', .99), '3', True, False),
             (None, None, '', False, True),

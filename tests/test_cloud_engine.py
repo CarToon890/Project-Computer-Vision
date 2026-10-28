@@ -159,6 +159,17 @@ class ImageTests(unittest.TestCase):
             with Image.open(path) as decoded:
                 self.assertEqual(decoded.getpixel((1, 1)), (255, 255, 255))
 
+    def test_jpeg_mpo_uses_primary_frame_without_resizing(self):
+        image = Image.new('RGB', (40, 60), 'white')
+        buffer = io.BytesIO()
+        image.save(buffer, format='MPO', save_all=True, append_images=[image])
+        content = buffer.getvalue()
+        with tempfile.TemporaryDirectory(dir=ROOT / 'presentation_build') as directory:
+            path = prepare_image(content, Path(directory) / 'A')
+            with Image.open(path) as decoded:
+                self.assertEqual(decoded.size, (40, 60))
+                self.assertEqual(decoded.getpixel((1, 1)), (255, 255, 255))
+
     def test_bad_file_oversize_and_decoded_pixel_limit(self):
         with tempfile.TemporaryDirectory(dir=ROOT / 'presentation_build') as directory:
             root = Path(directory)

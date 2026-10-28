@@ -26,7 +26,7 @@ def prepare_image(content, target):
             if image.width * image.height > MAX_PIXELS:
                 raise EngineError('too_many_pixels', 'ภาพต้องมีความละเอียดไม่เกิน 24 ล้านพิกเซล', 422)
             fmt = image.format
-            if fmt not in {'JPEG', 'PNG', 'HEIF', 'HEIC'}:
+            if fmt not in {'JPEG', 'MPO', 'PNG', 'HEIF', 'HEIC'}:
                 raise EngineError('unsupported_image', 'รองรับ JPEG, PNG และ HEIC', 422)
             image.load()
             if fmt in {'HEIF', 'HEIC'} or 'A' in image.getbands():
@@ -39,7 +39,7 @@ def prepare_image(content, target):
                 target = target.with_suffix('.png')
                 image.convert('RGB').save(target)
             else:
-                target = target.with_suffix('.jpg' if fmt == 'JPEG' else '.png')
+                target = target.with_suffix('.jpg' if fmt in {'JPEG', 'MPO'} else '.png')
                 target.write_bytes(content)
     except EngineError:
         raise
@@ -97,19 +97,26 @@ class ModelRuntime:
                 raise
 
     def read(self, job, attempt_id):
+        load_started = time.perf_counter()
+        cold = self.model is None
         self.load()
+        load_seconds = time.perf_counter() - load_started
         from omr_inference import read_role
         from omr_runtime import build_methods
         started = time.perf_counter()
         with TemporaryDirectory(prefix='omr-read-') as directory:
             folder = Path(directory)
-            readings, errors = {}, {}
+            readings, errors, transfers = {}, {}, {}
             for role in ('A', 'B'):
                 key = job['sources'].get(role)
                 if key is None:
                     continue
+                stage = time.perf_counter()
                 content = self.store.read(source_key(job['id'], key), MAX_IMAGE)
+                transfers[role] = {'download_seconds': time.perf_counter() - stage}
+                stage = time.perf_counter()
                 source = prepare_image(content, folder / (role + '_source'))
+                transfers[role]['prepare_seconds'] = time.perf_counter() - stage
                 try:
                     readings[role] = read_role(self.model, self.device, source, self.root, {}, folder, None, role)
                 except (ValueError, OSError, RuntimeError):
@@ -131,6 +138,9 @@ class ModelRuntime:
                       'methods': methods, 'pair_check': pair, 'assets': assets, 'errors': errors,
                       'registration': {r: v['registration'] for r, v in readings.items() if v},
                       'elapsed_seconds': time.perf_counter() - started,
+                      'timings': {'cold_start': cold, 'model_load_seconds': load_seconds,
+                                  'transfers': transfers,
+                                  'roles': {r: v.get('stage_timings', {}) for r,v in readings.items() if v}},
                       'canonical_labels_written': False, 'exam_key_required': False,
                       'preprocessing_version': self.config.get('preprocessing_version')}
             return result, files

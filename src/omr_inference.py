@@ -58,23 +58,37 @@ def combine_readings(a, b, cutoff, sheet_id):
 
 def read_role(model, device, source, data_root, conversion_map, output, sheet_id, role):
     started = time.perf_counter()
+    timings = {}
+    stage = time.perf_counter()
     raw = read_image(source, conversion_map, data_root)
+    timings['decode_seconds'] = time.perf_counter() - stage
     preview = Image.fromarray(cv2.cvtColor(raw, cv2.COLOR_BGR2RGB))
     preview.thumbnail((1200, 1600), Image.Resampling.LANCZOS)
     preview.save(output/f'{role}_input.jpg', quality=90)
+    stage = time.perf_counter()
     gray, centers, registration = rectify_sheet(raw, source_sheet_id=sheet_id)
+    timings['registration_seconds'] = time.perf_counter() - stage
+    stage = time.perf_counter()
     crops = np.stack([row_crop(gray, q, centers) for q in range(1, 101)])
+    timings['crops_seconds'] = time.perf_counter() - stage
+    stage = time.perf_counter()
     indices, confidence = predict_cnn(model, crops, device)
+    timings['cnn_seconds'] = time.perf_counter() - stage
+    stage = time.perf_counter()
     scores = np.stack([bubble_scores(gray, q, centers) for q in range(1, 101)])
+    timings['cla_seconds'] = time.perf_counter() - stage
+    stage = time.perf_counter()
     Image.fromarray(gray).save(output/f'{role}_registered.jpg', quality=92)
     sprite = Image.new('L', (600, 9000), 255)
     for i, points in enumerate(centers):
         crop = Image.fromarray(display_row(gray,i+1,centers)).resize((600, 90), Image.Resampling.LANCZOS)
         sprite.paste(crop, (0, i*90))
     sprite.save(output/f'{role}_rows.jpg', quality=94)
+    timings['render_seconds'] = time.perf_counter() - stage
     return {'predictions': [CLASSES[int(i)] for i in indices],
             'confidence': confidence.tolist(), 'registration': registration,
-            'cla_scores': scores.tolist(), 'processing_seconds': time.perf_counter()-started}
+            'cla_scores': scores.tolist(), 'processing_seconds': time.perf_counter()-started,
+            'stage_timings': timings}
 
 
 def write_report(output, rows, summary):

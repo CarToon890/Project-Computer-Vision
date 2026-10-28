@@ -10,3 +10,5 @@
 .review-layout{margin-top:24px}
 
 .exam-keys .workspace{margin:20px 0}.exam-keys label{display:block;margin:12px 0}.exam-keys label input,.exam-keys select{display:block;width:100%;max-width:420px;margin:6px 0}.score-settings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.exam-keys .question-grid{max-height:560px;overflow:auto}.exam-keys .strip img{position:absolute;left:0;width:100%;height:auto}@media(max-width:600px){.score-settings{grid-template-columns:1fr}.exam-keys .question-grid{max-height:225px}}
+
+.classroom .workspace{margin:20px 0}.classroom label{display:block;margin:12px 0}.classroom label input:not([type=file]),.classroom select{display:block;width:100%;max-width:420px;margin:6px 0}.class-sheets article{border-top:1px solid var(--line);padding:18px 0}.class-sheets h3,.class-sheets p{margin:0 0 6px}.class-sheets .actions{margin:8px 0}.classroom .photo label.file-button{display:inline-flex}.classroom .score-settings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}@media(max-width:600px){.classroom .score-settings{grid-template-columns:1fr}}

@@ -1,5 +1,6 @@
 import logging
 import threading
+import time
 
 from .security import EngineError
 
@@ -21,10 +22,18 @@ class EngineService:
                 return cached
             claimed = True
             result, files = self.runtime.read(job, attempt_id)
+            stage = time.perf_counter()
             self.repository.reserve_artifacts(job_id, attempt_id, files)
+            reserve_seconds = time.perf_counter() - stage
+            stage = time.perf_counter()
             for key, body in files.items():
                 self.store.put(key, body)
+            if 'timings' in result:
+                result['timings']['reserve_seconds'] = reserve_seconds
+                result['timings']['artifact_upload_seconds'] = time.perf_counter() - stage
+            stage = time.perf_counter()
             self.repository.complete(job_id, attempt_id, result)
+            log.info('omr_completion_seconds=%.4f', time.perf_counter() - stage)
             return result
         except Exception as exception:
             error = exception if isinstance(exception, EngineError) else EngineError('read_failed', 'อ่านภาพไม่สำเร็จ กรุณาลองใหม่', 503)

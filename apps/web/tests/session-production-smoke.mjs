@@ -1,0 +1,12 @@
+// Synthetic-only production smoke test. Caller must explicitly choose the demo URL and a generated PNG.
+import assert from 'node:assert/strict';import {upload} from '@vercel/blob/client';import {readFile} from 'node:fs/promises';
+const base=process.env.OMR_BENCH_URL;if(base!=='https://omr-project-demo.vercel.app'||process.env.OMR_TEST_CONFIRM!=='synthetic-only')throw Error('Explicit demo origin and synthetic-only confirmation required');
+const source=process.argv[2];if(!source)throw Error('Supply synthetic PNG path');const body=await readFile(source);const me=await fetch(base+'/api/me'),cookie=me.headers.get('set-cookie')?.split(';')[0];assert.ok(cookie);
+async function req(p,data,method){const r=await fetch(base+'/api/'+p,{method:method||(data===undefined?'GET':'POST'),headers:{cookie,origin:base,...(data===undefined?{}:{'content-type':'application/json'})},body:data===undefined?undefined:JSON.stringify(data)});const t=await r.text();let v;try{v=JSON.parse(t)}catch{v=t}if(!r.ok)throw Error(`${p}: ${r.status} ${v?.error||''}`);return v;}
+let key,session;try{
+ key=await req('exam-keys',{name:'synthetic smoke key',answers:Array.from({length:100},(_,i)=>String(((i+1)%5)+1)),rules:{full:100,penalty:0}});
+ session=await req('sessions',{name:'synthetic smoke session',keyId:key.id,rules:key.rules});
+ for(let n=1;n<=2;n++){session=await req(`sessions/${session.id}/sheets`,{revision:session.revision,studentLabel:`synthetic ${n}`});const sheet=session.sheets.at(-1),job=sheet.current_job_id;
+  const grant=await req(`jobs/${job}/upload`,{role:'A',size:body.length,type:'image/png',ext:'png'});await upload(grant.pathname,body,{access:'private',handleUploadUrl:base+'/api/upload',contentType:'image/png',headers:{cookie,origin:base}});await req(`jobs/${job}/upload-complete`,{pathname:grant.pathname});await req(`jobs/${job}/read`,{});session=await req('sessions/'+session.id);assert.equal(session.sheets.at(-1).status,'complete');assert.equal(session.sheets.at(-1).score.min,100);}
+ const csv=await req(`sessions/${session.id}/export`);assert.match(csv,/synthetic 1/);assert.match(csv,/synthetic 2/);console.log('PASS deployed synthetic session: two sheets, scores and CSV');
+}finally{if(session)try{const current=await req('sessions/'+session.id);await req('sessions/'+session.id,{revision:current.revision},'DELETE')}catch(e){console.error('session cleanup:',e.message)}if(key)try{await req('exam-keys/'+key.id,undefined,'DELETE')}catch(e){console.error('key cleanup:',e.message)}}

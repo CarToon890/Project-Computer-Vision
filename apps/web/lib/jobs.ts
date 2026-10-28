@@ -93,7 +93,7 @@ export async function review(jobId: string, data: {revision:number;method:string
 export async function saveKey(jobId: string, data: {revision:number;key:unknown[]}) {
   requireId(jobId);
   if (!Number.isInteger(data.revision) || !Array.isArray(data.key) || data.key.length!==100 || data.key.some(x=>x!==null && !/^[1-5]$/.test(String(x)))) throw new AppError(422, 'เฉลยต้องเป็น 1–5 จำนวน 100 ข้อ ช่องที่ยังไม่มีให้เว้นว่าง');
-  const {rowCount} = await pool().query("UPDATE omr_jobs SET grading=$3::jsonb,revision=revision+1 WHERE id=$1 AND revision=$2 AND status='complete'", [jobId,data.revision,JSON.stringify({key:data.key.map(x=>x===null?null:String(x))})]);
+  const {rowCount} = await pool().query("UPDATE omr_jobs SET grading=$3::jsonb,revision=revision+1 WHERE id=$1 AND revision=$2 AND status='complete' AND session_sheet_id IS NULL", [jobId,data.revision,JSON.stringify({key:data.key.map(x=>x===null?null:String(x))})]);
   if (!rowCount) throw new AppError(409, 'งานเปลี่ยนจากอีกแท็บ กรุณาโหลดงานล่าสุด');
   return job(jobId);
 }
@@ -142,6 +142,8 @@ export async function deleteJob(jobId:string) {
     await db.query('SELECT singleton FROM omr_storage_usage WHERE singleton FOR UPDATE');
     const {rows:[current]}=await db.query('SELECT id FROM omr_jobs WHERE id=$1 AND deleted_at IS NULL FOR UPDATE',[jobId]);
     if(!current)throw new AppError(404,'ไม่พบงานนี้');
+    const {rowCount:activeSheet}=await db.query('SELECT i.id FROM omr_session_sheets i JOIN omr_exam_sessions s ON s.id=i.session_id WHERE i.current_job_id=$1 AND s.deleted_at IS NULL',[jobId]);
+    if(activeSheet)throw new AppError(409,'งานนี้อยู่ในชุดตรวจ กรุณานำชุดตรวจออกก่อนลบงาน');
     await db.query("UPDATE omr_jobs SET deleted_at=now(),images_expires_at=now(),status='draft',sources='{}',result=NULL,reviews='{\"cnn\":{},\"cla\":{}}',grading=NULL,error_code=NULL,error_message=NULL,revision=revision+1 WHERE id=$1",[jobId]);
     await db.query('UPDATE omr_engine_slot SET job_id=NULL,attempt_id=NULL,expires_at=NULL WHERE singleton AND job_id=$1',[jobId]);
     // Keep image ledger until its original retention deadline. Outstanding short

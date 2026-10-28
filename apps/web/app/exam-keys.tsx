@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useState} from 'react';
-import {upload} from '@vercel/blob/client';
+import {uploadPhotos} from '../lib/upload-photos';
 
 type Key={id:string;name:string;answers:string[];rules:{full:number;penalty:number};created_at:string;version:number};
 async function api(path:string,data?:unknown,method?:string) {
@@ -19,17 +19,8 @@ export default function ExamKeys({job,setJob,perform,busy}:{job:any;setJob:(j:an
   function getRules(){const f=Number(full),p=Number(penalty);if(!Number.isFinite(f)||f<=0||!Number.isFinite(p)||p<0||full.trim()===''||penalty.trim()==='')throw Error('กรอกคะแนนเต็มมากกว่า 0 และคะแนนหักตั้งแต่ 0 ขึ้นไป');return {full:f,penalty:p};}
   async function readSheet(){
     if(!files.A)throw Error('กรุณาเลือกภาพใบเฉลย A');
-    const current=await api('jobs',{});setDraft(current);
-    for(const role of ['A','B']){
-      const file=files[role];if(!file)continue;
-      const ext=file.name.split('.').pop()?.toLowerCase()||'jpg';
-      const type=file.type||({jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',heic:'image/heic',heif:'image/heif'} as Record<string,string>)[ext];
-      if(file.size>20*1024*1024)throw Error('ภาพใหญ่เกิน 20 MiB');
-      setMessage(`กำลังอัปโหลดภาพ ${role}…`);
-      const grant=await api(`jobs/${current.id}/upload`,{role,size:file.size,type,ext});
-      await upload(grant.pathname,file,{access:'private',handleUploadUrl:'/api/upload',contentType:type,multipart:file.size>5*1024*1024,onUploadProgress:({percentage})=>setMessage(`กำลังอัปโหลดภาพ ${role} ${Math.round(percentage)}%`)});
-      await api(`jobs/${current.id}/upload-complete`,{pathname:grant.pathname});
-    }
+    const current=draft && !draft.result ? draft : await api('jobs',{});setDraft(current);
+    await uploadPhotos(current.id,[{role:'A',file:files.A},...(files.B?[{role:'B' as const,file:files.B}]:[])],api,setMessage);
     setMessage('กำลังอ่านใบเฉลย…');const read=await api(`jobs/${current.id}/read`,{});
     if(!read.result?.methods?.cnn || read.result.methods.cnn.length!==100)throw Error('อ่านใบเฉลยไม่ครบ กรุณาใช้ภาพใหม่');
     setDraft(read);setAnswers(read.result.methods.cnn.map((r:any)=>/^[1-5]$/.test(r.proposed_answer)?r.proposed_answer:''));setQuestion(1);setMessage('ตรวจภาพและแก้คำตอบก่อนยืนยันเฉลยทั้งชุด');
@@ -41,9 +32,9 @@ export default function ExamKeys({job,setJob,perform,busy}:{job:any;setJob:(j:an
   const score=job?.riskScores?.cnn, row=draft?.result?.methods?.cnn?.[question-1], remaining=answers.filter(a=>!/^[1-5]$/.test(a)).length;
   return <section className="exam-keys"><h2>เฉลยจากภาพกระดาษ</h2><p>ถ่ายใบเฉลยที่ฝนคำตอบถูกไว้ ตรวจและยืนยัน แล้วใช้เฉลยเดียวกันกับกระดาษนักเรียนหลายใบ</p>
     {message&&<p className="notice" role="status">{message}</p>}
-    <div className="actions"><button disabled={busy} onClick={()=>{setExpanded(!expanded);setDraft(null);setAnswers([]);setEditId('');setName('');}}>{expanded?'ปิดการสร้างเฉลย':'สร้างเฉลยจากภาพ'}</button><button disabled={busy} onClick={()=>perform(refresh)}>โหลดรายการเฉลย</button></div>
+    <div className="actions"><button disabled={busy} onClick={()=>{setExpanded(!expanded);setDraft(null);setAnswers([]);setEditId('');setName('');setFiles({});}}>{expanded?'ปิดการสร้างเฉลย':'สร้างเฉลยจากภาพ'}</button><button disabled={busy} onClick={()=>perform(refresh)}>โหลดรายการเฉลย</button></div>
     {expanded&&<div className="workspace"><h3>{editId?'แก้ไขเป็นเฉลยฉบับใหม่':'สร้างเฉลยจากภาพ'}</h3><label>ชื่อวิชาหรือชุดสอบ <input maxLength={120} value={name} onChange={e=>setName(e.target.value)} /></label>
-      {!draft&&!editId&&<><p>ใช้กระดาษแบบเดียวกับนักเรียน ถ่ายให้เห็นทั้งแผ่น</p><div className="upload-grid">{['A','B'].map(role=><div className="photo" key={role}><h3>ภาพ {role} {role==='B'?'(ไม่บังคับ)':''}</h3><div className="actions"><label className="file-button">เลือกภาพ<input disabled={busy} type="file" accept="image/jpeg,image/png,image/heic,image/heif,.heic,.heif" onChange={e=>{const f=e.target.files?.[0];if(f)setFiles(old=>({...old,[role]:f}));}}/></label><label className="file-button">ถ่ายภาพ<input disabled={busy} type="file" accept="image/*" capture="environment" onChange={e=>{const f=e.target.files?.[0];if(f)setFiles(old=>({...old,[role]:f}));}}/></label></div><p>{files[role]?.name||'ยังไม่ได้เลือกภาพ'}</p>{files[role]&&<button onClick={()=>setFiles(old=>{const n={...old};delete n[role];return n;})}>นำภาพออก</button>}</div>)}</div><button className="primary" disabled={busy||!files.A} onClick={()=>perform(readSheet)}>อ่านใบเฉลย</button></>}
+      {!draft?.result&&!editId&&<><p>ใช้กระดาษแบบเดียวกับนักเรียน ถ่ายให้เห็นทั้งแผ่น</p><div className="upload-grid">{['A','B'].map(role=><div className="photo" key={role}><h3>ภาพ {role} {role==='B'?'(ไม่บังคับ)':''}</h3><div className="actions"><label className="file-button">เลือกภาพ<input disabled={busy} type="file" accept="image/jpeg,image/png,image/heic,image/heif,.heic,.heif" onChange={e=>{const f=e.target.files?.[0];if(f)setFiles(old=>({...old,[role]:f}));}}/></label><label className="file-button">ถ่ายภาพ<input disabled={busy} type="file" accept="image/*" capture="environment" onChange={e=>{const f=e.target.files?.[0];if(f)setFiles(old=>({...old,[role]:f}));}}/></label></div><p>{files[role]?.name||'ยังไม่ได้เลือกภาพ'}</p>{files[role]&&<button onClick={()=>setFiles(old=>{const n={...old};delete n[role];return n;})}>นำภาพออก</button>}</div>)}</div><button className="primary" disabled={busy||!files.A} onClick={()=>perform(readSheet)}>อ่านใบเฉลย</button></>}
       {(draft?.result||editId)&&<><p>ตรวจคำตอบทุกข้อและแก้ไขข้อที่ต้องการ ก่อนกดยืนยันทั้งชุด · ยังไม่มีคำตอบ {remaining} ข้อ</p>{draft?.result?.pair_check?.blocked&&<p className="error">ภาพ A และ B ขัดแย้งกันมาก ระบบไม่นำภาพ B มาใช้ กรุณาตรวจภาพ</p>}{Object.entries(draft?.result?.errors || {}).map(([role,error])=><p className="error" key={role}>ภาพ {role}: {String(error)}</p>)}<div className="review-layout"><div className="question-grid" aria-label="เลือกข้อเฉลย">{answers.map((a,i)=><button key={i} aria-current={question===i+1?'true':undefined} className={draft?.result?.methods?.cnn?.[i]?.needs_review||!a?'risk':''} onClick={()=>setQuestion(i+1)}>{i+1}<small>{a||'ตรวจ'}</small></button>)}</div><div className="question"><h3>ข้อ {question}</h3>{row?.needs_review&&<p className="notice">ระบบแจ้งให้ตรวจข้อนี้</p>}{draft?.result&&Object.keys(draft.result.assets||{}).map(role=><figure key={role}><figcaption>รอยฝนภาพ {role}</figcaption><div className="strip"><img src={`/api/jobs/${draft.id}/image?role=${role}&view=rows`} alt={`รอยฝนข้อ ${question} ภาพ ${role}`} style={{top:`-${(question-1)*100}%`}}/></div></figure>)}<div className="answer-choices">{['1','2','3','4','5'].map(v=><button key={v} aria-pressed={answers[question-1]===v} onClick={()=>setAnswers(old=>old.map((a,i)=>i===question-1?v:a))}>{v}</button>)}</div><div className="actions"><button disabled={question===1} onClick={()=>setQuestion(question-1)}>ข้อก่อนหน้า</button><button disabled={question===100} onClick={()=>setQuestion(question+1)}>ข้อถัดไป</button></div></div></div><button className="primary" disabled={busy||remaining>0||!name.trim()} onClick={()=>perform(save)}>ยืนยันและบันทึกเฉลยทั้งชุด</button></>}
     </div>}
     <div className="workspace"><label htmlFor="saved-key">เลือกเฉลยที่บันทึกไว้</label><select id="saved-key" value={selected} onChange={e=>select(e.target.value)}><option value="">เลือกชุดเฉลย</option>{keys.map(k=><option key={k.id} value={k.id}>{k.name} · ฉบับ {k.version} · {new Date(k.created_at).toLocaleDateString('th-TH')}</option>)}</select>

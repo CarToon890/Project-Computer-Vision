@@ -31,7 +31,7 @@ export async function applyKey(jobId: string, data: any, owner: string | null) {
   const key=await getKey(data.keyId,owner), rules=validateRules(data.rules || key.rules);
   if (!Number.isInteger(data.revision)) throw new AppError(422,'ข้อมูลรุ่นงานไม่ถูกต้อง');
   const snapshot={key:key.answers, keyId:key.id, name:key.name, version:key.version, rules, policy:'risk-reviewed-v1'};
-  const {rowCount}=await pool().query("UPDATE omr_jobs SET grading=$3::jsonb,revision=revision+1 WHERE id=$1 AND revision=$2 AND status='complete'",[requireId(jobId),data.revision,JSON.stringify(snapshot)]);
+  const {rowCount}=await pool().query("UPDATE omr_jobs SET grading=$3::jsonb,revision=revision+1 WHERE id=$1 AND revision=$2 AND status='complete' AND session_sheet_id IS NULL",[requireId(jobId),data.revision,JSON.stringify(snapshot)]);
   if (!rowCount) throw new AppError(409,'งานเปลี่ยนจากอีกแท็บ กรุณาโหลดงานล่าสุด');
   const {job}=await import('./jobs'); return job(jobId);
 }

@@ -4,6 +4,7 @@ import { AppError, pool, requireId } from '../../../lib/db';
 import { owner, login, logout, sameOrigin, temporaryPreviewAccess, isDemo, demoOwner } from '../../../lib/auth';
 import * as jobs from '../../../lib/jobs';
 import * as examKeys from '../../../lib/exam-keys';
+import * as sessions from '../../../lib/exam-sessions';
 import { exportCsv } from '../../../lib/scoring.mjs';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -58,6 +59,21 @@ async function dispatch(request: Request, context: {params:Promise<{path:string[
     if(path.join('/')==='logout' && method==='POST') {await logout();return response({ok:true});}
     await owner();
     if(path.join('/')==='me' && method==='GET') {if(isDemo())await demoOwner(true);return response({ok:true,temporaryPreviewAccess:temporaryPreviewAccess()||isDemo(),demo:isDemo()});}
+    if(path[0]==='sessions') {
+      const identity=isDemo()?await demoOwner():null;
+      if(path.length===1 && method==='GET') return response({sessions:await sessions.list(identity)});
+      if(path.length===1 && method==='POST') return response(await sessions.create(await json(request),identity),201);
+      if(path.length>=2) {
+        const sid=requireId(path[1]);
+        if(path.length===2 && method==='GET') return response(await sessions.get(sid,identity));
+        if(path.length===2 && method==='DELETE') {await sessions.remove(sid,await json(request),identity);return response({ok:true});}
+        if(path.length===3 && path[2]==='sheets' && method==='POST') return response(await sessions.newSheet(sid,await json(request),identity,isDemo()),201);
+        if(path.length===3 && path[2]==='grading' && method==='POST') return response(await sessions.changeGrading(sid,await json(request),identity));
+        if(path.length===3 && path[2]==='export' && method==='GET') return new Response(await sessions.exportSummary(sid,identity),{headers:{'Content-Type':'text/csv; charset=utf-8','Content-Disposition':`attachment; filename="omr-class-${sid}.csv"`,'Cache-Control':'no-store'}});
+        if(path.length===5 && path[2]==='sheets' && path[4]==='label' && method==='POST') return response(await sessions.updateLabel(sid,path[3],await json(request),identity));
+        if(path.length===5 && path[2]==='sheets' && path[4]==='replacement' && method==='POST') return response(await sessions.replacement(sid,path[3],await json(request),identity,isDemo()),201);
+      }
+    }
     if(path[0]==='exam-keys') {
       const identity=isDemo()?await demoOwner():null;
       if(path.length===1 && method==='GET') return response({keys:await examKeys.listKeys(identity)});
