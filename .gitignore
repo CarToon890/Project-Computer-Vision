@@ -53,3 +53,6 @@ node_modules/
 .next/
 *.pt
 /output/app_runs/
+
+# Local timing reports contain dataset paths and inferred answers
+/output/optimization_baseline/
